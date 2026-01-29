@@ -6,7 +6,7 @@
 
 The workbook correlates Azure activity data with MDE device records to identify which machines are actively reporting and whether they are properly protected. It is designed to surface onboarding gaps that are difficult to detect through extension health or portal views alone.
 
-This workbook is intended for security engineers, cloud administrators, and SOC teams responsible for Defender for Servers and MDE compliance.
+This workbook is intended for security engineers, cloud administrators, and SOC teams responsible for Defender for Servers and MDE compliance. 
 
 ---
 
