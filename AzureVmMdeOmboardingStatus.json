@@ -7,43 +7,6 @@
         "version": "KqlParameterItem/1.0",
         "parameters": [
           {
-            "id": "025b9662-034f-4ba1-b416-fb18bd936073",
-            "version": "KqlParameterItem/1.0",
-            "name": "Status",
-            "label": "Status Filter",
-            "type": 2,
-            "isRequired": true,
-            "multiSelect": true,
-            "quote": "'",
-            "delimiter": ",",
-            "query": "{\"version\":\"1.0.0\",\"content\":\"[\\r\\n  {\\r\\n    \\\"value\\\": \\\"Missing\\\",\\r\\n    \\\"label\\\": \\\"Missing\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Active\\\",\\r\\n    \\\"label\\\": \\\"Active\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Inactive\\\",\\r\\n    \\\"label\\\": \\\"Inactive\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Insufficient Info\\\",\\r\\n    \\\"label\\\": \\\"Insufficient Info\\\"\\r\\n  }\\r\\n]\\r\\n\",\"transformers\":null}",
-            "typeSettings": {
-              "additionalResourceOptions": [
-                "value::all"
-              ],
-              "showDefault": false
-            },
-            "timeContext": {
-              "durationMs": 86400000
-            },
-            "defaultValue": "value::all",
-            "queryType": 8
-          },
-          {
-            "id": "7b2e035f-7828-4ea8-9718-9a9e1daeecac",
-            "version": "KqlParameterItem/1.0",
-            "name": "showHelp",
-            "label": "Show Help",
-            "type": 2,
-            "isRequired": true,
-            "typeSettings": {
-              "additionalResourceOptions": [],
-              "showDefault": false
-            },
-            "jsonData": "[\r\n  {\r\n    \"value\": \"Yes\",\r\n    \"label\": \"Yes\"\r\n  },\r\n  {\r\n    \"value\": \"Noa\",\r\n    \"label\": \"No\"\r\n  }\r\n]\r\n",
-            "value": "Noa"
-          },
-          {
             "id": "10b0a4e8-330a-4021-9c3f-f00dc27ada4c",
             "version": "KqlParameterItem/1.0",
             "name": "Workspace",
@@ -64,6 +27,97 @@
             "queryType": 1,
             "resourceType": "microsoft.resourcegraph/resources",
             "value": ""
+          },
+          {
+            "id": "025b9662-034f-4ba1-b416-fb18bd936073",
+            "version": "KqlParameterItem/1.0",
+            "name": "Status",
+            "label": "Status Filter",
+            "type": 2,
+            "isRequired": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "{\"version\":\"1.0.0\",\"content\":\"[\\r\\n  {\\r\\n    \\\"value\\\": \\\"Missing\\\",\\r\\n    \\\"label\\\": \\\"Missing\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Active\\\",\\r\\n    \\\"label\\\": \\\"Active\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Inactive\\\",\\r\\n    \\\"label\\\": \\\"Inactive\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Insufficient info\\\",\\r\\n    \\\"label\\\": \\\"Insufficient Info\\\"\\r\\n  }\\r\\n]\\r\\n\",\"transformers\":null}",
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "defaultValue": "value::all",
+            "queryType": 8
+          },
+          {
+            "id": "a1b2c3d4-5678-90ab-cdef-111111111111",
+            "version": "KqlParameterItem/1.0",
+            "name": "OSPlatform",
+            "label": "OS Platform",
+            "type": 2,
+            "isRequired": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "DeviceInfo\r\n| where TimeGenerated > ago(15d)\r\n| where isnotempty(AzureResourceId)\r\n| summarize by OSPlatform\r\n| where isnotempty(OSPlatform)\r\n| order by OSPlatform asc",
+            "crossComponentResources": [
+              "{Workspace}"
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "defaultValue": "value::all",
+            "queryType": 0,
+            "resourceType": "microsoft.operationalinsights/workspaces"
+          },
+          {
+            "id": "a1b2c3d4-5678-90ab-cdef-222222222222",
+            "version": "KqlParameterItem/1.0",
+            "name": "MachineGroup",
+            "label": "Machine Group",
+            "type": 2,
+            "isRequired": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "DeviceInfo\r\n| where TimeGenerated > ago(15d)\r\n| where isnotempty(AzureResourceId)\r\n| summarize by MachineGroup\r\n| extend MachineGroup = iif(isempty(MachineGroup), \"(Blank)\", MachineGroup)\r\n| order by MachineGroup asc",
+            "crossComponentResources": [
+              "{Workspace}"
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "defaultValue": "value::all",
+            "queryType": 0,
+            "resourceType": "microsoft.operationalinsights/workspaces"
+          },
+          {
+            "id": "7b2e035f-7828-4ea8-9718-9a9e1daeecac",
+            "version": "KqlParameterItem/1.0",
+            "name": "showHelp",
+            "label": "Show Help",
+            "type": 2,
+            "isRequired": true,
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "jsonData": "[\r\n  {\r\n    \"value\": \"Yes\",\r\n    \"label\": \"Yes\"\r\n  },\r\n  {\r\n    \"value\": \"Noa\",\r\n    \"label\": \"No\"\r\n  }\r\n]\r\n",
+            "value": "Noa"
           },
           {
             "version": "KqlParameterItem/1.0",
@@ -102,7 +156,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "AzureActivity\r\n| where TimeGenerated > ago(30d)\r\n| where ResourceProviderValue == \"MICROSOFT.COMPUTE\"\r\n| where _ResourceId contains \"/virtualmachines/\" and _ResourceId !contains \"extensions/\" and _ResourceId !contains \"virtualmachinescaleset\"\r\n| extend Parts = split(_ResourceId, \"/\")\r\n| extend _ResourceId = tolower(tostring(strcat_array(array_slice(Parts, 0, 8), \"/\")))\r\n| summarize arg_max(TimeGenerated, *) by _ResourceId\r\n| project AzureResourceId = _ResourceId\r\n| join kind=leftouter (\r\n    DeviceInfo\r\n    | where TimeGenerated > ago(15d)\r\n    | where isnotempty(AzureResourceId)\r\n    | summarize arg_max(TimeGenerated, *) by AzureResourceId\r\n    | project TimeGenerated, DeviceName, DeviceId, IsAzureADJoined, MachineGroup, OSPlatform, OnboardingStatus, SensorHealthState, AzureResourceId = tolower(tostring(AzureResourceId))\r\n) on AzureResourceId\r\n| extend ResourceName = tostring(split(AzureResourceId, \"/\").[-1])\r\n| extend MDE_Status = case(isempty( DeviceId), \"Missing\", isempty(SensorHealthState), OnboardingStatus, SensorHealthState)\r\n| project TimeGenerated, ViurtualMachine=AzureResourceId, DeviceName, OSPlatform, MDE_Status, OnboardingStatus, DeviceId, IsAzureADJoined, MachineGroup\r\n| where MDE_Status in ({Status})\r\n| summarize arg_max(TimeGenerated, *) by ViurtualMachine\r\n| summarize count() by MDE_Status",
+        "query": "AzureActivity\r\n| where TimeGenerated > ago(30d)\r\n| where ResourceProviderValue == \"MICROSOFT.COMPUTE\"\r\n| where _ResourceId contains \"/virtualmachines/\" and _ResourceId !contains \"extensions/\" and _ResourceId !contains \"virtualmachinescaleset\"\r\n| extend Parts = split(_ResourceId, \"/\")\r\n| extend _ResourceId = tolower(tostring(strcat_array(array_slice(Parts, 0, 8), \"/\")))\r\n| summarize arg_max(TimeGenerated, *) by _ResourceId\r\n| project AzureResourceId = _ResourceId\r\n| join kind=leftouter (\r\n    DeviceInfo\r\n    | where TimeGenerated > ago(15d)\r\n    | where isnotempty(AzureResourceId)\r\n    | summarize arg_max(TimeGenerated, *) by AzureResourceId\r\n    | project TimeGenerated, DeviceName, DeviceId, IsAzureADJoined, MachineGroup, OSPlatform, OnboardingStatus, SensorHealthState, AzureResourceId = tolower(tostring(AzureResourceId))\r\n) on AzureResourceId\r\n| extend ResourceName = tostring(split(AzureResourceId, \"/\").[-1])\r\n| extend MDE_Status = case(isempty( DeviceId), \"Missing\", isempty(SensorHealthState), OnboardingStatus, SensorHealthState)\r\n| extend MachineGroup = iif(isempty(MachineGroup), \"(Blank)\", MachineGroup)\r\n| project TimeGenerated, ViurtualMachine=AzureResourceId, DeviceName, OSPlatform, MDE_Status, OnboardingStatus, DeviceId, IsAzureADJoined, MachineGroup\r\n| where MDE_Status in ({Status})\r\n| where OSPlatform in ({OSPlatform}) or '{OSPlatform:escape}' == 'value::all' or isempty(OSPlatform)\r\n| where MachineGroup in ({MachineGroup}) or '{MachineGroup:escape}' == 'value::all'\r\n| summarize arg_max(TimeGenerated, *) by ViurtualMachine\r\n| summarize count() by MDE_Status",
         "size": 4,
         "title": "MDE Onboarding Status",
         "queryType": 0,
@@ -139,7 +193,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "AzureActivity\r\n| where TimeGenerated > ago(30d)\r\n| where ResourceProviderValue == \"MICROSOFT.COMPUTE\"\r\n| where _ResourceId contains \"/virtualmachines/\" and _ResourceId !contains \"extensions/\" and _ResourceId !contains \"virtualmachinescaleset\"\r\n| extend Parts = split(_ResourceId, \"/\")\r\n| extend _ResourceId = tolower(tostring(strcat_array(array_slice(Parts, 0, 8), \"/\")))\r\n| summarize arg_max(TimeGenerated, *) by _ResourceId\r\n| project AzureResourceId = _ResourceId\r\n| join kind=leftouter (\r\n    DeviceInfo\r\n    | where TimeGenerated > ago(15d)\r\n    | where isnotempty(AzureResourceId)\r\n    | summarize arg_max(TimeGenerated, *) by AzureResourceId\r\n    | project TimeGenerated, DeviceName, DeviceId, IsAzureADJoined, MachineGroup, OSPlatform, OnboardingStatus, SensorHealthState, AzureResourceId = tolower(tostring(AzureResourceId))\r\n) on AzureResourceId\r\n| extend ResourceName = tostring(split(AzureResourceId, \"/\").[-1])\r\n| extend MDE_Status = case(isempty( DeviceId), \"Missing\", isempty(SensorHealthState), OnboardingStatus, SensorHealthState)\r\n| project TimeGenerated, ViurtualMachine=AzureResourceId, DeviceName, OSPlatform, MDE_Status, OnboardingStatus, DeviceId, IsAzureADJoined, MachineGroup\r\n| where MDE_Status in ({Status})\r\n| summarize arg_max(TimeGenerated, *) by ViurtualMachine",
+        "query": "AzureActivity\r\n| where TimeGenerated > ago(30d)\r\n| where ResourceProviderValue == \"MICROSOFT.COMPUTE\"\r\n| where _ResourceId contains \"/virtualmachines/\" and _ResourceId !contains \"extensions/\" and _ResourceId !contains \"virtualmachinescaleset\"\r\n| extend Parts = split(_ResourceId, \"/\")\r\n| extend _ResourceId = tolower(tostring(strcat_array(array_slice(Parts, 0, 8), \"/\")))\r\n| summarize arg_max(TimeGenerated, *) by _ResourceId\r\n| project AzureResourceId = _ResourceId\r\n| join kind=leftouter (\r\n    DeviceInfo\r\n    | where TimeGenerated > ago(15d)\r\n    | where isnotempty(AzureResourceId)\r\n    | summarize arg_max(TimeGenerated, *) by AzureResourceId\r\n    | project TimeGenerated, DeviceName, DeviceId, IsAzureADJoined, MachineGroup, OSPlatform, OnboardingStatus, SensorHealthState, AzureResourceId = tolower(tostring(AzureResourceId))\r\n) on AzureResourceId\r\n| extend ResourceName = tostring(split(AzureResourceId, \"/\").[-1])\r\n| extend MDE_Status = case(isempty( DeviceId), \"Missing\", isempty(SensorHealthState), OnboardingStatus, SensorHealthState)\r\n| extend MachineGroup = iif(isempty(MachineGroup), \"(Blank)\", MachineGroup)\r\n| project TimeGenerated, ViurtualMachine=AzureResourceId, DeviceName, OSPlatform, MDE_Status, OnboardingStatus, DeviceId, IsAzureADJoined, MachineGroup\r\n| where MDE_Status in ({Status})\r\n| where OSPlatform in ({OSPlatform}) or '{OSPlatform:escape}' == 'value::all' or isempty(OSPlatform)\r\n| where MachineGroup in ({MachineGroup}) or '{MachineGroup:escape}' == 'value::all'\r\n| summarize arg_max(TimeGenerated, *) by ViurtualMachine",
         "size": 0,
         "showAnalytics": true,
         "title": "Verification of MDE Onboarding for Azure VMs",
