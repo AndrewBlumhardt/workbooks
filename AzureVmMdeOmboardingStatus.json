@@ -7,7 +7,7 @@
         "version": "KqlParameterItem/1.0",
         "parameters": [
           {
-            "id": "10b0a4e8-330a-4021-9c3f-f00dc27ada4c",
+            "id": "4e59ee01-8c33-4bf2-ac0a-7661cbd3bc69",
             "version": "KqlParameterItem/1.0",
             "name": "Workspace",
             "type": 5,
@@ -15,21 +15,18 @@
             "isRequired": true,
             "query": "resources\r\n| where type =~ 'microsoft.operationalinsights/workspaces'\r\n| order by name asc\r\n| summarize Selected = makelist(id, 10), All = makelist(id, 1000)\r\n| mvexpand All limit 1000\r\n| project value = tostring(All), label = tostring(All), selected = iff(Selected contains All, true, false)",
             "crossComponentResources": [
-              "value::all"
+              "value::tenant"
             ],
             "typeSettings": {
-              "resourceTypeFilter": {
-                "microsoft.operationalinsights/workspaces": true
-              },
               "additionalResourceOptions": [],
               "showDefault": false
             },
             "queryType": 1,
-            "resourceType": "microsoft.resourcegraph/resources",
+            "resourceType": "microsoft.resources/tenants",
             "value": ""
           },
           {
-            "id": "025b9662-034f-4ba1-b416-fb18bd936073",
+            "id": "23ce0e2b-a3f8-40fc-a887-1bff6b6ade3a",
             "version": "KqlParameterItem/1.0",
             "name": "Status",
             "label": "Status Filter",
@@ -49,34 +46,89 @@
               "durationMs": 86400000
             },
             "defaultValue": "value::all",
-            "queryType": 8
+            "queryType": 8,
+            "value": [
+              "value::all"
+            ]
           },
+          {
+            "id": "4b3fa847-4bba-4415-90f0-a3d204fa7ff7",
+            "version": "KqlParameterItem/1.0",
+            "name": "ShowAll",
+            "label": "Show Details Table",
+            "type": 2,
+            "description": "Show VM details table by default",
+            "isRequired": true,
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "jsonData": "[\r\n  {\r\n    \"value\": \"Yes\",\r\n    \"label\": \"Yes\"\r\n  },\r\n  {\r\n    \"value\": \"Noa\",\r\n    \"label\": \"No\"\r\n  }\r\n]\r\n",
+            "value": "Noa"
+          },
+          {
+            "id": "c6daf813-a3f9-40b9-b64d-09ffa3aea4ca",
+            "version": "KqlParameterItem/1.0",
+            "name": "Filters",
+            "label": "Show More Filters",
+            "type": 2,
+            "isRequired": true,
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "jsonData": "[\r\n  {\r\n    \"value\": \"Yes\",\r\n    \"label\": \"Yes\"\r\n  },\r\n  {\r\n    \"value\": \"Noa\",\r\n    \"label\": \"No\"\r\n  }\r\n]\r\n",
+            "value": "Noa"
+          },
+          {
+            "version": "KqlParameterItem/1.0",
+            "name": "showHelp",
+            "label": "Show Help",
+            "type": 2,
+            "isRequired": true,
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "jsonData": "[\r\n  {\r\n    \"value\": \"Yes\",\r\n    \"label\": \"Yes\"\r\n  },\r\n  {\r\n    \"value\": \"Noa\",\r\n    \"label\": \"No\"\r\n  }\r\n]\r\n",
+            "value": "Noa",
+            "id": "48020280-f8f9-4fa6-863a-e87f699005bc"
+          }
+        ],
+        "style": "above",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "parameters - 1 - Copy"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
           {
             "id": "a1b2c3d4-5678-90ab-cdef-111111111111",
             "version": "KqlParameterItem/1.0",
-            "name": "OSPlatform",
-            "label": "OS Platform",
-            "type": 2,
+            "name": "Subscription",
+            "type": 6,
             "isRequired": true,
             "multiSelect": true,
             "quote": "'",
             "delimiter": ",",
-            "query": "DeviceInfo\r\n| where TimeGenerated > ago(15d)\r\n| where isnotempty(AzureResourceId)\r\n| summarize by OSPlatform\r\n| where isnotempty(OSPlatform)\r\n| order by OSPlatform asc",
-            "crossComponentResources": [
-              "{Workspace}"
-            ],
             "typeSettings": {
               "additionalResourceOptions": [
                 "value::all"
               ],
+              "includeAll": false,
               "showDefault": false
             },
             "timeContext": {
               "durationMs": 86400000
             },
             "defaultValue": "value::all",
-            "queryType": 0,
-            "resourceType": "microsoft.operationalinsights/workspaces"
+            "value": [
+              "value::all"
+            ]
           },
           {
             "id": "a1b2c3d4-5678-90ab-cdef-222222222222",
@@ -103,47 +155,57 @@
             },
             "defaultValue": "value::all",
             "queryType": 0,
-            "resourceType": "microsoft.operationalinsights/workspaces"
-          },
-          {
-            "id": "7b2e035f-7828-4ea8-9718-9a9e1daeecac",
-            "version": "KqlParameterItem/1.0",
-            "name": "showHelp",
-            "label": "Show Help",
-            "type": 2,
-            "isRequired": true,
-            "typeSettings": {
-              "additionalResourceOptions": [],
-              "showDefault": false
-            },
-            "jsonData": "[\r\n  {\r\n    \"value\": \"Yes\",\r\n    \"label\": \"Yes\"\r\n  },\r\n  {\r\n    \"value\": \"Noa\",\r\n    \"label\": \"No\"\r\n  }\r\n]\r\n",
-            "value": "Noa"
+            "resourceType": "microsoft.operationalinsights/workspaces",
+            "value": [
+              "value::all"
+            ]
           },
           {
             "version": "KqlParameterItem/1.0",
-            "name": "ShowAll",
-            "label": "Show All VMs Below",
+            "name": "OSPlatform",
+            "label": "OS Platform",
             "type": 2,
             "isRequired": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "DeviceInfo\r\n| where TimeGenerated > ago(15d)\r\n| where isnotempty(AzureResourceId)\r\n| summarize by OSPlatform\r\n| where isnotempty(OSPlatform)\r\n| order by OSPlatform asc",
+            "crossComponentResources": [
+              "{Workspace}"
+            ],
             "typeSettings": {
-              "additionalResourceOptions": [],
+              "additionalResourceOptions": [
+                "value::all"
+              ],
               "showDefault": false
             },
-            "jsonData": "[\r\n  {\r\n    \"value\": \"Yes\",\r\n    \"label\": \"Yes\"\r\n  },\r\n  {\r\n    \"value\": \"Noa\",\r\n    \"label\": \"No\"\r\n  }\r\n]\r\n",
-            "value": "Noa",
-            "id": "3e572416-a65b-4c61-941e-3b8da606de8d"
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "defaultValue": "value::all",
+            "queryType": 0,
+            "resourceType": "microsoft.operationalinsights/workspaces",
+            "value": [
+              "value::all"
+            ],
+            "id": "f50b4f80-c939-4952-99a9-24b91f59d122"
           }
         ],
-        "style": "pills",
+        "style": "above",
         "queryType": 0,
         "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "conditionalVisibility": {
+        "parameterName": "Filters",
+        "comparison": "isEqualTo",
+        "value": "Yes"
       },
       "name": "parameters - 1"
     },
     {
       "type": 1,
       "content": {
-        "json": "### **About This Report**\r\n\r\nThis report helps verify Microsoft Defender for Endpoint (MDE) activation on Azure VMs and Azure Arc-enabled servers. It compares Azure activity data against MDE device records to identify which machines are active and properly protected.\r\n\r\n### **How the Report Works**\r\n\r\nThis report uses a two-part approach because MDE and Azure Resource data cannot be queried together directly.\r\n\r\n*   **Activity-Based Matching**: The report first finds all VMs with recorded Azure activity in the last 30 days. It then checks this list against MDE device information to determine activation status.\r\n*   **Inactive VMs**: A VM might be missing from the top table if it has had no Azure activity recently. Generally, active VMs record activity regularly. The bottom table provides a complete view of all VMs regardless of activity.\r\n\r\n### **Using the Tables**\r\n\r\nThis report contains two main tables:\r\n\r\n1.  **Active VMs with MDE Status (Top Table)**\r\n    *   **Content**: Shows VMs with Azure activity in the past 30 days, highlighting MDE and Microsoft Defender Antivirus status.\r\n    *   **Interactivity**: Use the status filter above this table to narrow results. Selecting one or more VMs in this table will filter the bottom table to show only those selected machines.\r\n\r\n2.  **All Tenant VMs (Bottom Table)**\r\n    *   **Content**: Shows only selected Azure VMs and Arc-enabled servers visible with your current permissions.\r\n    *   **Interactivity**: This table is automatically filtered when you select VMs in the top table, allowing for a detailed drill-down view.\r\n\r\n### **Troubleshooting Onboarding Issues**\r\n\r\nMDE activation can fail for several reasons. Defender for Cloud should automatically onboard Azure VMs when Defender for Servers is enabled, but issues can still occur.\r\n\r\n### **Troubleshooting MDE Onboarding Issues**\r\n\r\nDefender for Cloud should automatically onboard Azure VMs when Defender for Servers is enabled, but issues can occur. The sections below describe common failure points and how to resolve them.\r\n\r\n#### 1. Onboarding Conflict\r\nA VM can be healthy in MDE even if the automated Defender for Cloud extension shows a \"Failed\" state. This happens when the VM was onboarded to MDE using a direct method (like a script or GPO) while the Azure VM Guest Agent was not working.\r\n\r\nThe result is a healthy MDE sensor, but a failed Azure extension. The failed extension is a symptom of a broken Azure VM Guest Agent, which should be investigated separately as it impacts all VM management functions, not just MDE.\r\n\r\n#### 2. Defender for Servers Disabled\r\nThe subscription hosting the VM does not have Microsoft Defender for Servers enabled. While direct onboarding is possible, MDE for Servers requires a Defender for Servers Plan 1 or Plan 2 license to be compliant.\r\n\r\n*   **Resolution**: Enable Defender for Servers on the subscription or, for temporary use cases, onboard the VM directly.\r\n\r\n#### 3. Missing or Failed MDE Extension\r\nThe VM is missing the MDE onboarding extension, or the extension repeatedly fails. The Azure VM Guest Agent is typically missing or unresponsive due to its initial exclusion from a custom VM image, corruption of its service, or resource exhaustion from a non-standard server workload. The VM Agent is the critical process that allows Azure to manage the VM and deploy extensions.\r\n\r\n*   **How to Reinstall the Azure VM Guest Agent**:\r\n    If you suspect the agent is corrupted, reinstalling it can resolve the issue.\r\n\r\n    **For Windows:**\r\n    1.  First, obtain the latest Windows Azure VM Agent MSI package. You can find this by searching online for \"Windows Azure VM Agent download\". https://learn.microsoft.com/en-us/azure/virtual-machines/extensions/agent-windows\r\n    2.  Save the MSI file to the VM and run the following from an elevated Command Prompt to install it quietly:\r\n        ```\r\n        msiexec.exe /i WindowsAzureVmAgent.msi /quiet /L*v C:\\AzureVmAgentInstall.log\r\n        ```\r\n\r\n    **For Linux (Debian/Ubuntu):**\r\n    Run the following commands to remove and then reinstall the agent.\r\n    ```bash\r\n    # Remove the existing agent\r\n    sudo apt-get -y remove walinuxagent\r\n\r\n    # Reinstall the agent\r\n    sudo apt-get -y install walinuxagent\r\n    ```\r\n\r\n    **For Linux (RHEL/CentOS/Oracle):**\r\n    Run the following commands to remove and then reinstall the agent.\r\n    ```bash\r\n    # Remove the existing agent\r\n    sudo yum -y remove waagent\r\n\r\n    # Reinstall the agent\r\n    sudo yum -y install waagent\r\n    ```\r\n\r\n#### 4. Failed MDE Extension (Temporary)\r\nThe MDE extension was deployed but failed to install or run. This can be caused by a temporary issue, such as a file lock or a pending reboot.\r\n*   **Resolution**: From the VM's \"Extensions + applications\" page in the Azure portal, find the MDE extension (`MDE.Windows` or `MDE.Linux`) and uninstall it. Wait for Defender for Cloud to automatically attempt to redeploy it.\r\n\r\n#### 5. Local OS or Network Issue\r\nA problem on the VM itself is preventing the MDE sensor from activating. This could be a conflict with other software, a previous onboarding to a different MDE tenant, or a local policy that forcibly disables the MDE service.\r\n*   **Resolution**: This requires interactive troubleshooting on the VM. It may be necessary to run the official MDE offboarding script to completely remove all traces of the sensor before attempting to onboard it again."
+        "json": "### **About This Report**\r\n\r\nThis report helps verify Microsoft Defender for Endpoint (MDE) activation on Azure VMs. It compares Azure Activity data against MDE device records to identify which machines are active and properly protected.\r\n\r\n### **How the Report Works**\r\n\r\nThis report uses a two-part approach because MDE and Azure Resource data cannot be queried together directly.\r\n\r\n*   **Activity-Based Matching**: The report first finds all VMs with recorded Azure activity in the last 30 days. It then checks this list against MDE device information to determine activation status.\r\n*   **Inactive VMs**: A VM might be missing from the top table if it has had no Azure activity recently. Generally, active VMs record activity regularly. The bottom table provides a complete view of all VMs regardless of activity.\r\n\r\n### **Using the Tables**\r\n\r\nThis report contains two main tables:\r\n\r\n1.  **Compare Active VMs with All VMs in MDE (Top Table)**\r\n    *   **Content**: Shows VMs with Azure activity in the past 30 days, highlighting MDE and Microsoft Defender Antivirus status.\r\n    *   **Interactivity**: Use the filters above this table to narrow results. Selecting one or more VMs in this table will filter the bottom table to show only those selected machines.\r\n\r\n2.  **All Tenant VMs (Bottom Table)**\r\n    *   **Content**: Shows only selected Azure VMs and Arc-enabled servers visible with your current permissions.\r\n    *   **Interactivity**: This table is automatically filtered when you select VMs in the top table, allowing for a detailed drill-down view.\r\n\r\n### **Troubleshooting MDE Onboarding Issues**\r\n\r\nDefender for Cloud should automatically onboard Azure VMs when Defender for Servers is enabled, but issues can occur. The sections below describe common failure points and how to resolve them.\r\n\r\n#### 1. Onboarding Conflict\r\nA VM can be healthy in MDE even if the automated Defender for Cloud extension shows a \"Failed\" state. This happens when the VM was onboarded to MDE using a direct method (like a script or GPO) while the Azure VM Guest Agent was not working.\r\n\r\nThe result is a healthy MDE sensor, but a failed Azure extension. The failed extension is a symptom of a broken Azure VM Guest Agent, which should be investigated separately as it impacts all VM management functions, not just MDE.\r\n\r\n#### 2. Defender for Servers Disabled\r\nThe subscription hosting the VM does not have Microsoft Defender for Servers enabled. While direct onboarding is possible, MDE for Servers requires a Defender for Servers Plan 1 or Plan 2 license to be compliant.\r\n\r\n*   **Resolution**: Enable Defender for Servers on the subscription or, for temporary use cases, onboard the VM directly to MDE.\r\n\r\n#### 3. Missing or Failed MDE Extension\r\nThe VM is missing the MDE onboarding extension, or the extension repeatedly fails. The Azure VM Guest Agent is typically missing or unresponsive due to its initial exclusion from a custom VM image, corruption of its service, or resource exhaustion from a non-standard server workload. The VM Agent is the critical process that allows Azure to manage the VM and deploy extensions.\r\n\r\n*   **How to Reinstall the Azure VM Guest Agent**:\r\n    If you suspect the agent is corrupted, reinstalling it can resolve the issue.\r\n\r\n    **For Windows:**\r\n    1.  First, obtain the latest Windows Azure VM Agent MSI package. You can find this by searching online for \"Windows Azure VM Agent download\". https://learn.microsoft.com/en-us/azure/virtual-machines/extensions/agent-windows\r\n    2.  Save the MSI file to the VM and run the following from an elevated Command Prompt to install it quietly:\r\n        ```\r\n        msiexec.exe /i WindowsAzureVmAgent.msi /quiet /L*v C:\\AzureVmAgentInstall.log\r\n        ```\r\n\r\n    **For Linux (Debian/Ubuntu):**\r\n    Run the following commands to remove and then reinstall the agent.\r\n    ```bash\r\n    # Remove the existing agent\r\n    sudo apt-get -y remove walinuxagent\r\n\r\n    # Reinstall the agent\r\n    sudo apt-get -y install walinuxagent\r\n    ```\r\n\r\n    **For Linux (RHEL/CentOS/Oracle):**\r\n    Run the following commands to remove and then reinstall the agent.\r\n    ```bash\r\n    # Remove the existing agent\r\n    sudo yum -y remove waagent\r\n\r\n    # Reinstall the agent\r\n    sudo yum -y install waagent\r\n    ```\r\n\r\n#### 4. Failed MDE Extension (Temporary)\r\nThe MDE extension was deployed but failed to install or run. This can be caused by a temporary issue, such as a file lock or a pending reboot.\r\n*   **Resolution**: From the VM's \"Extensions + applications\" page in the Azure portal, find the MDE extension (`MDE.Windows` or `MDE.Linux`) and uninstall it. Wait for Defender for Cloud to automatically attempt to redeploy it.\r\n\r\n#### 5. Local OS or Network Issue\r\nA problem on the VM itself is preventing the MDE sensor from activating. This could be a conflict with other software, a previous onboarding to a different MDE tenant, or a local policy that forcibly disables the MDE service.\r\n*   **Resolution**: This requires interactive troubleshooting on the VM. It may be necessary to run the official MDE offboarding script to completely remove all traces of the sensor before attempting to onboard it again."
       },
       "conditionalVisibility": {
         "parameterName": "showHelp",
@@ -156,9 +218,9 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "AzureActivity\r\n| where TimeGenerated > ago(30d)\r\n| where ResourceProviderValue == \"MICROSOFT.COMPUTE\"\r\n| where _ResourceId contains \"/virtualmachines/\" and _ResourceId !contains \"extensions/\" and _ResourceId !contains \"virtualmachinescaleset\"\r\n| extend Parts = split(_ResourceId, \"/\")\r\n| extend _ResourceId = tolower(tostring(strcat_array(array_slice(Parts, 0, 8), \"/\")))\r\n| summarize arg_max(TimeGenerated, *) by _ResourceId\r\n| project AzureResourceId = _ResourceId\r\n| join kind=leftouter (\r\n    DeviceInfo\r\n    | where TimeGenerated > ago(15d)\r\n    | where isnotempty(AzureResourceId)\r\n    | summarize arg_max(TimeGenerated, *) by AzureResourceId\r\n    | project TimeGenerated, DeviceName, DeviceId, IsAzureADJoined, MachineGroup, OSPlatform, OnboardingStatus, SensorHealthState, AzureResourceId = tolower(tostring(AzureResourceId))\r\n) on AzureResourceId\r\n| extend ResourceName = tostring(split(AzureResourceId, \"/\").[-1])\r\n| extend MDE_Status = case(isempty( DeviceId), \"Missing\", isempty(SensorHealthState), OnboardingStatus, SensorHealthState)\r\n| extend MachineGroup = iif(isempty(MachineGroup), \"(Blank)\", MachineGroup)\r\n| project TimeGenerated, ViurtualMachine=AzureResourceId, DeviceName, OSPlatform, MDE_Status, OnboardingStatus, DeviceId, IsAzureADJoined, MachineGroup\r\n| where MDE_Status in ({Status})\r\n| where OSPlatform in ({OSPlatform}) or '{OSPlatform:escape}' == 'value::all' or isempty(OSPlatform)\r\n| where MachineGroup in ({MachineGroup}) or '{MachineGroup:escape}' == 'value::all'\r\n| summarize arg_max(TimeGenerated, *) by ViurtualMachine\r\n| summarize count() by MDE_Status",
+        "query": "AzureActivity\r\n| where TimeGenerated > ago(30d)\r\n| where ResourceProviderValue == \"MICROSOFT.COMPUTE\"\r\n| where _ResourceId contains \"/virtualmachines/\" and _ResourceId !contains \"extensions/\" and _ResourceId !contains \"virtualmachinescaleset\"\r\n| extend Parts = split(_ResourceId, \"/\")\r\n| extend _ResourceId = tolower(tostring(strcat_array(array_slice(Parts, 0, 8), \"/\")))\r\n| summarize arg_max(TimeGenerated, *) by _ResourceId\r\n| project AzureResourceId = _ResourceId\r\n| join kind=leftouter (\r\n    DeviceInfo\r\n    | where TimeGenerated > ago(15d)\r\n    | where isnotempty(AzureResourceId)\r\n    | summarize arg_max(TimeGenerated, *) by AzureResourceId\r\n    | project TimeGenerated, DeviceName, DeviceId, IsAzureADJoined, MachineGroup, OSPlatform, OnboardingStatus, SensorHealthState, AzureResourceId = tolower(tostring(AzureResourceId))\r\n) on AzureResourceId\r\n| extend ResourceName = tostring(split(AzureResourceId, \"/\").[-1])\r\n| extend MDE_Status = case(isempty( DeviceId), \"Missing\", isempty(SensorHealthState), OnboardingStatus, SensorHealthState)\r\n| extend OnboardingStatus = iif(isempty( DeviceId), \"Missing\", OnboardingStatus)\r\n| extend MachineGroup = iif(isempty(MachineGroup), \"(Blank)\", MachineGroup)\r\n| extend Subscription = tostring(strcat(\"/subscriptions/\", split(AzureResourceId, \"/\").[2]))\r\n| project LastSeen=TimeGenerated, ViurtualMachine=AzureResourceId, DeviceName, OSPlatform, MDE_Onboarding= OnboardingStatus, MDE_Status, EntraJoined=IsAzureADJoined, Subscription, [\"MDE DeviceID\"]=DeviceId, MachineGroup\r\n| where OSPlatform in ({OSPlatform}) or '{OSPlatform:escape}' == 'value::all' or isempty(OSPlatform)\r\n| where MachineGroup in ({MachineGroup}) or '{MachineGroup:escape}' == 'value::all' or MachineGroup==\"(Blank)\"\r\n| where Subscription in ({Subscription})\r\n| summarize arg_max(LastSeen, *) by ViurtualMachine\r\n| summarize count() by MDE_Onboarding",
         "size": 4,
-        "title": "MDE Onboarding Status",
+        "title": "MDE Onboarding Status (Based on MDE data)",
         "queryType": 0,
         "resourceType": "microsoft.operationalinsights/workspaces",
         "crossComponentResources": [
@@ -176,9 +238,9 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "resources\r\n| where (type =~ \"microsoft.hybridcompute/machines\" and kind =~ \"AVS\") or type =~ \"microsoft.compute/virtualmachines\"\r\n| join kind=leftouter (\r\n    resources\r\n    | where type endswith '/extensions' and name in ('MDE.Windows', 'MDE.Linux')\r\n    | extend parentId = substring(id, 0, indexof(id, '/extensions'))\r\n    | project MdeName = name, MdeStatus = tostring(properties.provisioningState), parentId\r\n) on $left.id == $right.parentId\r\n| extend  provisioningState = properties.provisioningState\r\n| extend  vmSize = properties.hardwareProfile.vmSize\r\n| extend  computerName = properties.osProfile.computerName\r\n| extend  adminUsername = properties.osProfile.adminUsername\r\n| extend  provisionVMAgent = properties.osProfile.windowsConfiguration.provisionVMAgent\r\n| extend  enableAutomaticUpdates = properties.osProfile.windowsConfiguration.enableAutomaticUpdates\r\n| extend  timeCreated = properties.timeCreated\r\n| extend  secureBootEnabled = properties.securityProfile.uefiSettings.secureBootEnabled\r\n| extend  osName = properties.extended.instanceView.osName\r\n| extend  displayStatus = properties.extended.instanceView.powerState.displayStatus\r\n| extend  licenseType = properties.licenseType\r\n| extend  osName = iif(isnull( osName), licenseType, osName)\r\n| extend MdeName = iif(isempty( MdeName), \"Missing\", MdeName)\r\n| extend MdeStatus = iif(isempty( MdeStatus), \"Missing\", MdeStatus)\r\n| extend id = tolower(id)\r\n| project vmName=id, computerName, Extension=MdeName, ExtStatus=MdeStatus, provisionVMAgent, enableAutomaticUpdates, secureBootEnabled, displayStatus, osName,  subscriptionId, location, provisioningState, vmSize, adminUsername, ['tags']\r\n| summarize count() by Extension",
+        "query": "resources\r\n| where (type =~ \"microsoft.hybridcompute/machines\" and kind =~ \"AVS\") or type =~ \"microsoft.compute/virtualmachines\"\r\n| join kind=leftouter (\r\n    resources\r\n    | where type endswith '/extensions' and name in ('MDE.Windows', 'MDE.Linux')\r\n    | extend parentId = substring(id, 0, indexof(id, '/extensions'))\r\n    | project MdeName = name, MdeStatus = tostring(properties.provisioningState), parentId\r\n) on $left.id == $right.parentId\r\n| extend  provisioningState = properties.provisioningState\r\n| extend  vmSize = properties.hardwareProfile.vmSize\r\n| extend  computerName = properties.osProfile.computerName\r\n| extend  adminUsername = properties.osProfile.adminUsername\r\n| extend  provisionVMAgent = properties.osProfile.windowsConfiguration.provisionVMAgent\r\n| extend  enableAutomaticUpdates = properties.osProfile.windowsConfiguration.enableAutomaticUpdates\r\n| extend  timeCreated = properties.timeCreated\r\n| extend  secureBootEnabled = properties.securityProfile.uefiSettings.secureBootEnabled\r\n| extend  osName = properties.extended.instanceView.osName\r\n| extend  displayStatus = properties.extended.instanceView.powerState.displayStatus\r\n| extend  licenseType = properties.licenseType\r\n| extend  osName = iif(isnull( osName), licenseType, osName)\r\n| extend MdeName = iif(isempty( MdeName), \"Missing\", MdeName)\r\n| extend MdeStatus = iif(isempty( MdeStatus), \"Missing\", MdeStatus)\r\n| extend id = tolower(id)\r\n| extend subscriptionId = strcat(\"/subscriptions/\", tostring(subscriptionId))\r\n| project vmName=id, computerName, Extension=MdeName, ExtStatus=MdeStatus, provisionVMAgent, enableAutomaticUpdates, secureBootEnabled, displayStatus, osName,  subscriptionId, location, provisioningState, vmSize, adminUsername, ['tags']\r\n| where subscriptionId in ({Subscription})\r\n| summarize count() by Extension",
         "size": 4,
-        "title": "MDE Extension Status",
+        "title": "MDE Extension Status (Based on ARG query)",
         "queryType": 1,
         "resourceType": "microsoft.resources/tenants",
         "crossComponentResources": [
@@ -193,10 +255,10 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "AzureActivity\r\n| where TimeGenerated > ago(30d)\r\n| where ResourceProviderValue == \"MICROSOFT.COMPUTE\"\r\n| where _ResourceId contains \"/virtualmachines/\" and _ResourceId !contains \"extensions/\" and _ResourceId !contains \"virtualmachinescaleset\"\r\n| extend Parts = split(_ResourceId, \"/\")\r\n| extend _ResourceId = tolower(tostring(strcat_array(array_slice(Parts, 0, 8), \"/\")))\r\n| summarize arg_max(TimeGenerated, *) by _ResourceId\r\n| project AzureResourceId = _ResourceId\r\n| join kind=leftouter (\r\n    DeviceInfo\r\n    | where TimeGenerated > ago(15d)\r\n    | where isnotempty(AzureResourceId)\r\n    | summarize arg_max(TimeGenerated, *) by AzureResourceId\r\n    | project TimeGenerated, DeviceName, DeviceId, IsAzureADJoined, MachineGroup, OSPlatform, OnboardingStatus, SensorHealthState, AzureResourceId = tolower(tostring(AzureResourceId))\r\n) on AzureResourceId\r\n| extend ResourceName = tostring(split(AzureResourceId, \"/\").[-1])\r\n| extend MDE_Status = case(isempty( DeviceId), \"Missing\", isempty(SensorHealthState), OnboardingStatus, SensorHealthState)\r\n| extend MachineGroup = iif(isempty(MachineGroup), \"(Blank)\", MachineGroup)\r\n| project TimeGenerated, ViurtualMachine=AzureResourceId, DeviceName, OSPlatform, MDE_Status, OnboardingStatus, DeviceId, IsAzureADJoined, MachineGroup\r\n| where MDE_Status in ({Status})\r\n| where OSPlatform in ({OSPlatform}) or '{OSPlatform:escape}' == 'value::all' or isempty(OSPlatform)\r\n| where MachineGroup in ({MachineGroup}) or '{MachineGroup:escape}' == 'value::all'\r\n| summarize arg_max(TimeGenerated, *) by ViurtualMachine",
+        "query": "AzureActivity\r\n| where TimeGenerated > ago(30d)\r\n| where ResourceProviderValue == \"MICROSOFT.COMPUTE\"\r\n| where _ResourceId contains \"/virtualmachines/\" and _ResourceId !contains \"extensions/\" and _ResourceId !contains \"virtualmachinescaleset\"\r\n| extend Parts = split(_ResourceId, \"/\")\r\n| extend _ResourceId = tolower(tostring(strcat_array(array_slice(Parts, 0, 8), \"/\")))\r\n| summarize arg_max(TimeGenerated, *) by _ResourceId\r\n| project AzureResourceId = _ResourceId\r\n| join kind=leftouter (\r\n    DeviceInfo\r\n    | where TimeGenerated > ago(15d)\r\n    | where isnotempty(AzureResourceId)\r\n    | summarize arg_max(TimeGenerated, *) by AzureResourceId\r\n    | project TimeGenerated, DeviceName, DeviceId, IsAzureADJoined, MachineGroup, OSPlatform, OnboardingStatus, SensorHealthState, AzureResourceId = tolower(tostring(AzureResourceId))\r\n) on AzureResourceId\r\n| extend ResourceName = tostring(split(AzureResourceId, \"/\").[-1])\r\n| extend MDE_Status = case(isempty( DeviceId), \"Missing\", isempty(SensorHealthState), OnboardingStatus, SensorHealthState)\r\n| extend OnboardingStatus = iif(isempty( DeviceId), \"Missing\", OnboardingStatus)\r\n| extend MachineGroup = iif(isempty(MachineGroup), \"(Blank)\", MachineGroup)\r\n| extend Subscription = tostring(strcat(\"/subscriptions/\", split(AzureResourceId, \"/\").[2]))\r\n| project LastSeen=TimeGenerated, ViurtualMachine=AzureResourceId, DeviceName, OSPlatform, MDE_Onboarding= OnboardingStatus, MDE_Status, EntraJoined=IsAzureADJoined, Subscription, [\"MDE DeviceID\"]=DeviceId, MachineGroup\r\n| where MDE_Status in ({Status})\r\n| where OSPlatform in ({OSPlatform}) or '{OSPlatform:escape}' == 'value::all' or isempty(OSPlatform)\r\n| where MachineGroup in ({MachineGroup}) or '{MachineGroup:escape}' == 'value::all' or MachineGroup==\"(Blank)\"\r\n| where Subscription in ({Subscription})\r\n| summarize arg_max(LastSeen, *) by ViurtualMachine",
         "size": 0,
         "showAnalytics": true,
-        "title": "Verification of MDE Onboarding for Azure VMs",
+        "title": "Compare Active VMs with All VMs in MDE",
         "exportMultipleValues": true,
         "exportedParameters": [
           {
@@ -222,14 +284,20 @@
               }
             },
             {
-              "columnMatch": "TimeGenerated",
-              "formatter": 5
+              "columnMatch": "LastSeen",
+              "formatter": 6,
+              "formatOptions": {
+                "customColumnWidthSetting": "13ch"
+              }
             },
             {
               "columnMatch": "DeviceName",
               "formatter": 0,
               "formatOptions": {
                 "customColumnWidthSetting": "22ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "Hostname may be different from VM name"
               }
             },
             {
@@ -237,6 +305,31 @@
               "formatter": 0,
               "formatOptions": {
                 "customColumnWidthSetting": "22ch"
+              }
+            },
+            {
+              "columnMatch": "MDE_Onboarding",
+              "formatter": 18,
+              "formatOptions": {
+                "thresholdsOptions": "icons",
+                "thresholdsGrid": [
+                  {
+                    "operator": "==",
+                    "thresholdValue": "Onboarded",
+                    "representation": "success",
+                    "text": "{0}{1}"
+                  },
+                  {
+                    "operator": "Default",
+                    "thresholdValue": null,
+                    "representation": "warning",
+                    "text": "{0}{1}"
+                  }
+                ],
+                "customColumnWidthSetting": "19ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "VM may be onboarded by extension or by MDE native options"
               }
             },
             {
@@ -258,43 +351,33 @@
                     "text": "{0}{1}"
                   }
                 ],
-                "customColumnWidthSetting": "18ch"
+                "customColumnWidthSetting": "16ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "Status of the onboarded sensor"
               }
             },
             {
-              "columnMatch": "OnboardingStatus",
-              "formatter": 18,
-              "formatOptions": {
-                "thresholdsOptions": "icons",
-                "thresholdsGrid": [
-                  {
-                    "operator": "!=",
-                    "thresholdValue": "Onboarded",
-                    "representation": "2",
-                    "text": "{0}{1}"
-                  },
-                  {
-                    "operator": "Default",
-                    "thresholdValue": null,
-                    "representation": "success",
-                    "text": "{0}{1}"
-                  }
-                ],
-                "customColumnWidthSetting": "18ch"
-              }
-            },
-            {
-              "columnMatch": "DeviceId",
+              "columnMatch": "EntraJoined",
               "formatter": 0,
               "formatOptions": {
-                "customColumnWidthSetting": "22ch"
+                "customColumnWidthSetting": "14ch"
               }
             },
             {
-              "columnMatch": "IsAzureADJoined",
+              "columnMatch": "Subscription",
+              "formatter": 15,
+              "formatOptions": {
+                "linkTarget": null,
+                "showIcon": true,
+                "customColumnWidthSetting": "32ch"
+              }
+            },
+            {
+              "columnMatch": "MDE DeviceID",
               "formatter": 0,
               "formatOptions": {
-                "customColumnWidthSetting": "22ch"
+                "customColumnWidthSetting": "32ch"
               }
             },
             {
@@ -303,11 +386,23 @@
               "formatOptions": {
                 "customColumnWidthSetting": "22ch"
               }
+            },
+            {
+              "columnMatch": "TimeGenerated",
+              "formatter": 6
+            },
+            {
+              "columnMatch": "DeviceId",
+              "formatter": 0,
+              "formatOptions": {
+                "customColumnWidthSetting": "22ch"
+              }
             }
           ],
           "rowLimit": 10000,
           "filter": true
-        }
+        },
+        "sortBy": []
       },
       "showPin": true,
       "name": "query - 0"
@@ -316,10 +411,10 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "resources\r\n| where (type =~ \"microsoft.hybridcompute/machines\" and kind =~ \"AVS\") or type =~ \"microsoft.compute/virtualmachines\"\r\n| join kind=leftouter (\r\n    resources\r\n    | where type endswith '/extensions' and name in ('MDE.Windows', 'MDE.Linux')\r\n    | extend parentId = substring(id, 0, indexof(id, '/extensions'))\r\n    | project MdeName = name, MdeStatus = tostring(properties.provisioningState), parentId\r\n) on $left.id == $right.parentId\r\n| extend  provisioningState = properties.provisioningState\r\n| extend  vmSize = properties.hardwareProfile.vmSize\r\n| extend  computerName = properties.osProfile.computerName\r\n| extend  adminUsername = properties.osProfile.adminUsername\r\n| extend  provisionVMAgent = properties.osProfile.windowsConfiguration.provisionVMAgent\r\n| extend  enableAutomaticUpdates = properties.osProfile.windowsConfiguration.enableAutomaticUpdates\r\n| extend  timeCreated = properties.timeCreated\r\n| extend  secureBootEnabled = properties.securityProfile.uefiSettings.secureBootEnabled\r\n| extend  osName = properties.extended.instanceView.osName\r\n| extend  displayStatus = properties.extended.instanceView.powerState.displayStatus\r\n| extend  licenseType = properties.licenseType\r\n| extend  osName = iif(isnull( osName), licenseType, osName)\r\n| extend MdeName = iif(isempty( MdeName), \"Missing\", MdeName)\r\n| extend MdeStatus = iif(isempty( MdeStatus), \"Missing\", MdeStatus)\r\n| extend id = tolower(id)\r\n| project vmName=id, computerName, Extension=MdeName, ExtStatus=MdeStatus, provisionVMAgent, enableAutomaticUpdates, secureBootEnabled, displayStatus, osName,  subscriptionId, location, provisioningState, vmSize, adminUsername, ['tags']\r\n| where vmName in ({VerifyVM})",
+        "query": "resources\r\n| where (type =~ \"microsoft.hybridcompute/machines\" and kind =~ \"AVS\") or type =~ \"microsoft.compute/virtualmachines\"\r\n| join kind=leftouter (\r\n    resources\r\n    | where type endswith '/extensions' and name in ('MDE.Windows', 'MDE.Linux')\r\n    | extend parentId = substring(id, 0, indexof(id, '/extensions'))\r\n    | project MdeName = name, MdeStatus = tostring(properties.provisioningState), parentId\r\n) on $left.id == $right.parentId\r\n| extend  provisioningState = properties.provisioningState\r\n| extend  vmSize = properties.hardwareProfile.vmSize\r\n| extend  computerName = properties.osProfile.computerName\r\n| extend  adminUsername = properties.osProfile.adminUsername\r\n| extend  provisionVMAgent = properties.osProfile.windowsConfiguration.provisionVMAgent\r\n| extend  enableAutomaticUpdates = properties.osProfile.windowsConfiguration.enableAutomaticUpdates\r\n| extend  timeCreated = properties.timeCreated\r\n| extend  secureBootEnabled = properties.securityProfile.uefiSettings.secureBootEnabled\r\n| extend  osName = properties.extended.instanceView.osName\r\n| extend  displayStatus = properties.extended.instanceView.powerState.displayStatus\r\n| extend  licenseType = properties.licenseType\r\n| extend  osName = iif(isnull( osName), licenseType, osName)\r\n| extend MdeName = iif(isempty( MdeName), \"Missing\", MdeName)\r\n| extend MdeStatus = iif(isempty( MdeStatus), \"Missing\", MdeStatus)\r\n| extend id = tolower(id)\r\n| extend VMAgent = case(provisionVMAgent==\"true\", \"Enabled\", isempty(provisionVMAgent), \"Unknown\", \"Disabled\")\r\n| extend AutoUpdates = case(enableAutomaticUpdates==\"true\", \"Enabled\", isempty(enableAutomaticUpdates), \"Unknown\", \"Disabled\")\r\n| extend BootEnabled = case(secureBootEnabled==\"true\", \"Enabled\", isempty(secureBootEnabled), \"Unknown\", \"Disabled\")\r\n| extend subscriptionId = strcat(\"/subscriptions/\", tostring(subscriptionId))\r\n| project vmName=id, computerName, VMAgent, Extension=MdeName, ExtStatus=MdeStatus, AutoUpdates, BootEnabled, displayStatus, osName,  Subscription=subscriptionId, location, provisioningState, vmSize, adminUsername, ['tags']\r\n| where Subscription in ({Subscription})\r\n| where vmName in ({VerifyVM})\r\n",
         "size": 0,
         "showAnalytics": true,
-        "title": "Azure Resource Graph  - VM Details (Verify MDE Extension)",
+        "title": "Azure Resource Graph  - VM Details (Select VMs above to filter))",
         "showExportToExcel": true,
         "queryType": 1,
         "resourceType": "microsoft.resources/tenants",
@@ -340,6 +435,37 @@
               "formatter": 1,
               "formatOptions": {
                 "customColumnWidthSetting": "22ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "Hostname may be different from VM name"
+              }
+            },
+            {
+              "columnMatch": "VMAgent",
+              "formatter": 18,
+              "formatOptions": {
+                "thresholdsOptions": "icons",
+                "thresholdsGrid": [
+                  {
+                    "text": "{0}{1}"
+                  },
+                  {
+                    "operator": "==",
+                    "thresholdValue": "Enabled",
+                    "representation": "success",
+                    "text": "{0}{1}"
+                  },
+                  {
+                    "operator": "Default",
+                    "thresholdValue": null,
+                    "representation": "warning",
+                    "text": "{0}{1}"
+                  }
+                ],
+                "customColumnWidthSetting": "14ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "Required to deploy extensions"
               }
             },
             {
@@ -362,6 +488,9 @@
                   }
                 ],
                 "customColumnWidthSetting": "14ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "MDE extension attempts to onboard MDE"
               }
             },
             {
@@ -384,17 +513,23 @@
                   }
                 ],
                 "customColumnWidthSetting": "14ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "Extensions may fail deployment"
               }
             },
             {
-              "columnMatch": "provisionVMAgent",
+              "columnMatch": "AutoUpdates",
               "formatter": 18,
               "formatOptions": {
                 "thresholdsOptions": "icons",
                 "thresholdsGrid": [
                   {
+                    "text": "{0}{1}"
+                  },
+                  {
                     "operator": "==",
-                    "thresholdValue": "true",
+                    "thresholdValue": "Enabled",
                     "representation": "success",
                     "text": "{0}{1}"
                   },
@@ -406,17 +541,23 @@
                   }
                 ],
                 "customColumnWidthSetting": "14ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "VMs registered for auto patching"
               }
             },
             {
-              "columnMatch": "enableAutomaticUpdates",
+              "columnMatch": "BootEnabled",
               "formatter": 18,
               "formatOptions": {
                 "thresholdsOptions": "icons",
                 "thresholdsGrid": [
                   {
+                    "text": "{0}{1}"
+                  },
+                  {
                     "operator": "==",
-                    "thresholdValue": "true",
+                    "thresholdValue": "Enabled",
                     "representation": "success",
                     "text": "{0}{1}"
                   },
@@ -428,28 +569,9 @@
                   }
                 ],
                 "customColumnWidthSetting": "14ch"
-              }
-            },
-            {
-              "columnMatch": "secureBootEnabled",
-              "formatter": 18,
-              "formatOptions": {
-                "thresholdsOptions": "icons",
-                "thresholdsGrid": [
-                  {
-                    "operator": "==",
-                    "thresholdValue": "true",
-                    "representation": "success",
-                    "text": "{0}{1}"
-                  },
-                  {
-                    "operator": "Default",
-                    "thresholdValue": null,
-                    "representation": "warning",
-                    "text": "{0}{1}"
-                  }
-                ],
-                "customColumnWidthSetting": "14ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "Secure boot status"
               }
             },
             {
@@ -472,20 +594,24 @@
                   }
                 ],
                 "customColumnWidthSetting": "14ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "Stopped or deallocated may not be listed above"
               }
             },
             {
               "columnMatch": "osName",
               "formatter": 1,
               "formatOptions": {
-                "customColumnWidthSetting": "22ch"
+                "customColumnWidthSetting": "14ch"
               }
             },
             {
-              "columnMatch": "subscriptionId",
-              "formatter": 1,
+              "columnMatch": "Subscription",
+              "formatter": 15,
               "formatOptions": {
-                "customColumnWidthSetting": "22ch"
+                "linkTarget": null,
+                "showIcon": true
               }
             },
             {
@@ -500,6 +626,9 @@
               "formatter": 1,
               "formatOptions": {
                 "customColumnWidthSetting": "14ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "State of the VM provisioning"
               }
             },
             {
@@ -522,19 +651,20 @@
       },
       "conditionalVisibility": {
         "parameterName": "VerifyVM",
-        "comparison": "isNotEqualTo"
+        "comparison": "isNotEqualTo",
+        "value": ""
       },
       "showPin": true,
-      "name": "Azure Resource Graph  - VM Details"
+      "name": "Azure Resource Graph  - VM Details - Copy"
     },
     {
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "resources\r\n| where (type =~ \"microsoft.hybridcompute/machines\" and kind =~ \"AVS\") or type =~ \"microsoft.compute/virtualmachines\"\r\n| join kind=leftouter (\r\n    resources\r\n    | where type endswith '/extensions' and name in ('MDE.Windows', 'MDE.Linux')\r\n    | extend parentId = substring(id, 0, indexof(id, '/extensions'))\r\n    | project MdeName = name, MdeStatus = tostring(properties.provisioningState), parentId\r\n) on $left.id == $right.parentId\r\n| extend  provisioningState = properties.provisioningState\r\n| extend  vmSize = properties.hardwareProfile.vmSize\r\n| extend  computerName = properties.osProfile.computerName\r\n| extend  adminUsername = properties.osProfile.adminUsername\r\n| extend  provisionVMAgent = properties.osProfile.windowsConfiguration.provisionVMAgent\r\n| extend  enableAutomaticUpdates = properties.osProfile.windowsConfiguration.enableAutomaticUpdates\r\n| extend  timeCreated = properties.timeCreated\r\n| extend  secureBootEnabled = properties.securityProfile.uefiSettings.secureBootEnabled\r\n| extend  osName = properties.extended.instanceView.osName\r\n| extend  displayStatus = properties.extended.instanceView.powerState.displayStatus\r\n| extend  licenseType = properties.licenseType\r\n| extend  osName = iif(isnull( osName), licenseType, osName)\r\n| extend MdeName = iif(isempty( MdeName), \"Missing\", MdeName)\r\n| extend MdeStatus = iif(isempty( MdeStatus), \"Missing\", MdeStatus)\r\n| extend id = tolower(id)\r\n| project vmName=id, computerName, Extension=MdeName, ExtStatus=MdeStatus, provisionVMAgent, enableAutomaticUpdates, secureBootEnabled, displayStatus, osName,  subscriptionId, location, provisioningState, vmSize, adminUsername, ['tags']",
+        "query": "resources\r\n| where (type =~ \"microsoft.hybridcompute/machines\" and kind =~ \"AVS\") or type =~ \"microsoft.compute/virtualmachines\"\r\n| join kind=leftouter (\r\n    resources\r\n    | where type endswith '/extensions' and name in ('MDE.Windows', 'MDE.Linux')\r\n    | extend parentId = substring(id, 0, indexof(id, '/extensions'))\r\n    | project MdeName = name, MdeStatus = tostring(properties.provisioningState), parentId\r\n) on $left.id == $right.parentId\r\n| extend  provisioningState = properties.provisioningState\r\n| extend  vmSize = properties.hardwareProfile.vmSize\r\n| extend  computerName = properties.osProfile.computerName\r\n| extend  adminUsername = properties.osProfile.adminUsername\r\n| extend  provisionVMAgent = properties.osProfile.windowsConfiguration.provisionVMAgent\r\n| extend  enableAutomaticUpdates = properties.osProfile.windowsConfiguration.enableAutomaticUpdates\r\n| extend  timeCreated = properties.timeCreated\r\n| extend  secureBootEnabled = properties.securityProfile.uefiSettings.secureBootEnabled\r\n| extend  osName = properties.extended.instanceView.osName\r\n| extend  displayStatus = properties.extended.instanceView.powerState.displayStatus\r\n| extend  licenseType = properties.licenseType\r\n| extend  osName = iif(isnull( osName), licenseType, osName)\r\n| extend MdeName = iif(isempty( MdeName), \"Missing\", MdeName)\r\n| extend MdeStatus = iif(isempty( MdeStatus), \"Missing\", MdeStatus)\r\n| extend id = tolower(id)\r\n| extend VMAgent = case(provisionVMAgent==\"true\", \"Enabled\", isempty(provisionVMAgent), \"Unknown\", \"Disabled\")\r\n| extend AutoUpdates = case(enableAutomaticUpdates==\"true\", \"Enabled\", isempty(enableAutomaticUpdates), \"Unknown\", \"Disabled\")\r\n| extend BootEnabled = case(secureBootEnabled==\"true\", \"Enabled\", isempty(secureBootEnabled), \"Unknown\", \"Disabled\")\r\n| extend subscriptionId = strcat(\"/subscriptions/\", tostring(subscriptionId))\r\n| project vmName=id, computerName, VMAgent, Extension=MdeName, ExtStatus=MdeStatus, AutoUpdates, BootEnabled, displayStatus, osName,  Subscription=subscriptionId, location, provisioningState, vmSize, adminUsername, ['tags']\r\n| where Subscription in ({Subscription})\r\n",
         "size": 0,
         "showAnalytics": true,
-        "title": "Azure Resource Graph  - VM Details (Full Unfiltered)",
+        "title": "Azure Resource Graph  - VM Details (Full details, toggle off above)",
         "showExportToExcel": true,
         "queryType": 1,
         "resourceType": "microsoft.resources/tenants",
@@ -555,6 +685,37 @@
               "formatter": 1,
               "formatOptions": {
                 "customColumnWidthSetting": "22ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "Hostname may be different from VM name"
+              }
+            },
+            {
+              "columnMatch": "VMAgent",
+              "formatter": 18,
+              "formatOptions": {
+                "thresholdsOptions": "icons",
+                "thresholdsGrid": [
+                  {
+                    "text": "{0}{1}"
+                  },
+                  {
+                    "operator": "==",
+                    "thresholdValue": "Enabled",
+                    "representation": "success",
+                    "text": "{0}{1}"
+                  },
+                  {
+                    "operator": "Default",
+                    "thresholdValue": null,
+                    "representation": "warning",
+                    "text": "{0}{1}"
+                  }
+                ],
+                "customColumnWidthSetting": "14ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "Required to deploy extensions"
               }
             },
             {
@@ -577,6 +738,9 @@
                   }
                 ],
                 "customColumnWidthSetting": "14ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "MDE extension attempts to onboard MDE"
               }
             },
             {
@@ -599,17 +763,23 @@
                   }
                 ],
                 "customColumnWidthSetting": "14ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "Extensions may fail deployment"
               }
             },
             {
-              "columnMatch": "provisionVMAgent",
+              "columnMatch": "AutoUpdates",
               "formatter": 18,
               "formatOptions": {
                 "thresholdsOptions": "icons",
                 "thresholdsGrid": [
                   {
+                    "text": "{0}{1}"
+                  },
+                  {
                     "operator": "==",
-                    "thresholdValue": "true",
+                    "thresholdValue": "Enabled",
                     "representation": "success",
                     "text": "{0}{1}"
                   },
@@ -621,17 +791,23 @@
                   }
                 ],
                 "customColumnWidthSetting": "14ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "VMs registered for auto patching"
               }
             },
             {
-              "columnMatch": "enableAutomaticUpdates",
+              "columnMatch": "BootEnabled",
               "formatter": 18,
               "formatOptions": {
                 "thresholdsOptions": "icons",
                 "thresholdsGrid": [
                   {
+                    "text": "{0}{1}"
+                  },
+                  {
                     "operator": "==",
-                    "thresholdValue": "true",
+                    "thresholdValue": "Enabled",
                     "representation": "success",
                     "text": "{0}{1}"
                   },
@@ -643,28 +819,9 @@
                   }
                 ],
                 "customColumnWidthSetting": "14ch"
-              }
-            },
-            {
-              "columnMatch": "secureBootEnabled",
-              "formatter": 18,
-              "formatOptions": {
-                "thresholdsOptions": "icons",
-                "thresholdsGrid": [
-                  {
-                    "operator": "==",
-                    "thresholdValue": "true",
-                    "representation": "success",
-                    "text": "{0}{1}"
-                  },
-                  {
-                    "operator": "Default",
-                    "thresholdValue": null,
-                    "representation": "warning",
-                    "text": "{0}{1}"
-                  }
-                ],
-                "customColumnWidthSetting": "14ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "Secure boot status"
               }
             },
             {
@@ -687,6 +844,9 @@
                   }
                 ],
                 "customColumnWidthSetting": "14ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "Stopped or deallocated may not be listed above"
               }
             },
             {
@@ -697,10 +857,11 @@
               }
             },
             {
-              "columnMatch": "subscriptionId",
-              "formatter": 1,
+              "columnMatch": "Subscription",
+              "formatter": 15,
               "formatOptions": {
-                "customColumnWidthSetting": "22ch"
+                "linkTarget": null,
+                "showIcon": true
               }
             },
             {
@@ -715,6 +876,9 @@
               "formatter": 1,
               "formatOptions": {
                 "customColumnWidthSetting": "14ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "State of the VM provisioning"
               }
             },
             {
@@ -732,7 +896,8 @@
               }
             }
           ],
-          "rowLimit": 10000
+          "rowLimit": 10000,
+          "filter": true
         }
       },
       "conditionalVisibility": {
@@ -741,11 +906,11 @@
         "value": "Yes"
       },
       "showPin": true,
-      "name": "Azure Resource Graph  - VM Details - Copy"
+      "name": "Azure Resource Graph  - VM Details - Copy - Copy"
     }
   ],
   "fallbackResourceIds": [
-    ""
+    "Azure Security Center"
   ],
   "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
 }
