@@ -8,7 +8,7 @@ The workbook correlates Azure activity data with MDE device records to identify 
 
 This workbook is intended for security engineers, cloud administrators, and SOC teams responsible for Defender for Servers and MDE compliance. 
 
-**Feb 2206 Update** revised for major update, bug fix, and secondary search method.
+**Feb 2026 Update** revised for major update, bug fix, and secondary search method.
 
 This workbook is intended for security engineers, cloud administrators, and SOC teams responsible for Defender for Servers and MDE compliance. 
 ---
