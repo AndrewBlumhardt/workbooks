@@ -32,7 +32,7 @@
             },
             "queryType": 1,
             "resourceType": "microsoft.resources/tenants",
-            "value": "/subscriptions/9d7f94c8-8dae-4e2d-bde8-0b511e32f065/resourceGroups/rg-spinnakerdev-ncdoc/providers/Microsoft.OperationalInsights/workspaces/sen-spinnakerdev-ncdoc"
+            "value": ""
           },
           {
             "id": "e22ca900-82fc-4859-ba27-5a94de64284f",
