@@ -1,0 +1,3017 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "# Entra Admin & Risky User Review Workbook"
+      },
+      "name": "text - 5"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "abc4834c-384e-4c13-9e27-50ba42c77071",
+            "version": "KqlParameterItem/1.0",
+            "name": "Workspace",
+            "type": 5,
+            "isRequired": true,
+            "query": "resources\r\n| where type =~ 'microsoft.operationalinsights/workspaces'\r\n| order by name asc\r\n| summarize Selected = makelist(id, 10), All = makelist(id, 1000)\r\n| mvexpand All limit 1000\r\n| project value = tostring(All), label = tostring(All), selected = iff(Selected contains All, true, false)\r\n| where value !contains \"DefaultW\"",
+            "crossComponentResources": [
+              "value::tenant"
+            ],
+            "typeSettings": {
+              "resourceTypeFilter": {
+                "microsoft.operationalinsights/workspaces": true
+              },
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resources/tenants",
+            "value": ""
+          },
+          {
+            "id": "ae2dfba8-9c08-4170-8f66-4f4530ddfc99",
+            "version": "KqlParameterItem/1.0",
+            "name": "TimeGenerated",
+            "type": 4,
+            "isRequired": true,
+            "isGlobal": true,
+            "typeSettings": {
+              "selectableValues": [
+                {
+                  "durationMs": 43200000
+                },
+                {
+                  "durationMs": 86400000
+                },
+                {
+                  "durationMs": 172800000
+                },
+                {
+                  "durationMs": 259200000
+                },
+                {
+                  "durationMs": 604800000
+                },
+                {
+                  "durationMs": 1209600000
+                },
+                {
+                  "durationMs": 2419200000
+                },
+                {
+                  "durationMs": 2592000000
+                },
+                {
+                  "durationMs": 5184000000
+                },
+                {
+                  "durationMs": 7776000000
+                }
+              ]
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "value": {
+              "durationMs": 604800000
+            }
+          },
+          {
+            "id": "3e0170f3-36df-4149-ab6a-97bdeb6a2cc4",
+            "version": "KqlParameterItem/1.0",
+            "name": "Search",
+            "label": "Search Term",
+            "type": 1,
+            "description": "Keyword like admin or adm",
+            "isRequired": true,
+            "isGlobal": true,
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "value": ".admin@"
+          },
+          {
+            "id": "67bcb5dc-3233-484e-928a-98f547ea294f",
+            "version": "KqlParameterItem/1.0",
+            "name": "showHelp",
+            "label": "Show Help",
+            "type": 2,
+            "isRequired": true,
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "jsonData": "[\r\n  {\r\n    \"value\": \"Yes\",\r\n    \"label\": \"Yes\"\r\n  },\r\n  {\r\n    \"value\": \"No\",\r\n    \"label\": \"No\"\r\n  }\r\n]\r\n",
+            "value": "No"
+          }
+        ],
+        "style": "above",
+        "queryType": 0,
+        "resourceType": "microsoft.resources/tenants"
+      },
+      "name": "parameters - 1"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 1,
+            "content": {
+              "json": "<h1>Entra Admin & Risky User Review Workbook</h1>\r\n<hr>\r\n\r\n<h2>📖 Overview</h2>\r\n<p>This Azure Sentinel Workbook provides a comprehensive suite of tools for security analysts to proactively review and investigate administrative and risky user behavior within Microsoft Entra ID. It correlates data from multiple Microsoft security services to build a detailed picture of user activity, helping to bridge the gap between separate admin accounts and their corresponding contact users.</p>\r\n<p>The workbook is designed to be interactive, allowing you to select an admin or a risky user and pivot to their detailed activity, including sign-in timelines, related incidents, associated devices, PIM history, and Azure administrative actions.</p>\r\n\r\n<h2>⚙️ Prerequisites</h2>\r\n<p>For the workbook to function correctly, your Log Analytics Workspace must be collecting data from the following sources:</p>\r\n<ul>\r\n    <li><b>Microsoft Entra ID:</b>\r\n        <ul>\r\n            <li><code>SigninLogs</code></li>\r\n            <li><code>AuditLogs</code></li>\r\n            <li><code>IdentityInfo</code> (from Microsoft Defender for Identity)</li>\r\n        </ul>\r\n    </li>\r\n    <li><b>Microsoft Sentinel:</b>\r\n        <ul>\r\n            <li><code>BehaviorAnalytics</code> (UEBA)</li>\r\n            <li><code>SecurityIncident</code></li>\r\n            <li><code>SecurityAlert</code></li>\r\n        </ul>\r\n    </li>\r\n    <li><b>Microsoft Defender for Endpoint (MDE):</b>\r\n        <ul>\r\n            <li><code>DeviceLogonEvents</code></li>\r\n            <li><code>DeviceInfo</code></li>\r\n        </ul>\r\n    </li>\r\n    <li><b>Azure:</b>\r\n        <ul>\r\n            <li><code>AzureActivity</code></li>\r\n        </ul>\r\n    </li>\r\n</ul>\r\n<p><b>Note:</b> Some widgets or tabs may appear empty if the corresponding data tables are not available in your workspace.</p>\r\n\r\n<h2>🔑 Key Features & Tabs</h2>\r\n<p>The workbook is organized into four main tabs, each designed for a specific investigative purpose.</p>\r\n\r\n<h3>1. Admin Review</h3>\r\n<p>This tab is the primary dashboard for auditing administrative accounts.</p>\r\n<ul>\r\n    <li><b>Initial View:</b> It begins by listing all admin accounts that have been active in the last 90 days.</li>\r\n    <li><b>Deep Dive:</b> By selecting an admin from the list, you can populate a series of detailed views, including:\r\n        <ul>\r\n            <li>Potential contact user accounts based on naming conventions.</li>\r\n            <li>A timeline of recent sign-in activity.</li>\r\n            <li>Related security incidents and alerts.</li>\r\n            <li>On-premises identity information from MDI.</li>\r\n            <li>Unusual behaviors flagged by Sentinel UEBA.</li>\r\n            <li>Associated devices from MDE.</li>\r\n            <li>Privileged Identity Management (PIM) activation history.</li>\r\n            <li>Azure administrative activity from the Azure Activity Log.</li>\r\n        </ul>\r\n    </li>\r\n</ul>\r\n\r\n<h3>2. Risky User Review</h3>\r\n<p>This tab applies a similar investigative pattern to users that have been flagged as \"risky\" by Entra ID Protection.</p>\r\n<ul>\r\n    <li><b>Focus:</b> The goal is to quickly determine if a compromised or risky user has performed any administrative activity or warrants a deeper investigation.</li>\r\n    <li><b>Default Filters:</b> It defaults to showing users with recent pre-authentication risk factors who have also had successful sign-ins, making it a powerful tool for hunting compromised accounts.</li>\r\n</ul>\r\n\r\n<h3>3. Admin Contact Lookup</h3>\r\n<p>This tab provides a utility to help identify the primary user account associated with a separate, dedicated admin account.</p>\r\n<ul>\r\n    <li><b>Best Practice:</b> While it's recommended to record the contact user in the \"alternative contact\" field of the admin account's properties in Entra ID, this is not always done.</li>\r\n    <li><b>Solution:</b> This lookup uses naming similarities to find probable matches, helping you connect with the correct person responsible for an admin account.</li>\r\n</ul>\r\n\r\n<h3>4. PIM Activity Review</h3>\r\n<p>This section offers a focused view of Privileged Identity Management (PIM) usage across your environment.</p>\r\n<ul>\r\n    <li><b>Insights:</b> It helps you understand who is using PIM, which roles are being activated, and how often.</li>\r\n    <li><b>Hidden Patterns:</b> It specifically surfaces the \"justification\" comments provided during PIM activation, which are often difficult to review and analyze in the Azure portal, allowing you to spot patterns or non-compliance.</li>\r\n</ul>\r\n"
+            },
+            "name": "text - 0"
+          }
+        ]
+      },
+      "conditionalVisibility": {
+        "parameterName": "showHelp",
+        "comparison": "isEqualTo",
+        "value": "Yes"
+      },
+      "name": "Show Help"
+    },
+    {
+      "type": 11,
+      "content": {
+        "version": "LinkItem/1.0",
+        "style": "tabs",
+        "tabStyle": "bigger",
+        "links": [
+          {
+            "id": "dc877aa9-7343-437d-86fe-2b13ac8d318f",
+            "cellValue": "tab",
+            "linkTarget": "parameter",
+            "linkLabel": "Admin Review",
+            "subTarget": "tab1",
+            "style": "link"
+          },
+          {
+            "id": "d8852f15-05e4-4ad4-96bb-9582117f96d0",
+            "cellValue": "tab",
+            "linkTarget": "parameter",
+            "linkLabel": "Risky Users Review",
+            "subTarget": "tab3",
+            "style": "link"
+          },
+          {
+            "id": "ba0c237c-39c8-4ebf-9ce4-16ddb9ca75a9",
+            "cellValue": "tab",
+            "linkTarget": "parameter",
+            "linkLabel": "Admin Contact Lookup",
+            "subTarget": "tab2",
+            "style": "link"
+          },
+          {
+            "id": "0191798e-c996-48c9-8564-3e0febc1be98",
+            "cellValue": "tab",
+            "linkTarget": "parameter",
+            "linkLabel": "PIM Activity Review",
+            "subTarget": "tab4",
+            "style": "link"
+          }
+        ]
+      },
+      "name": "links - 2"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let adminSignins = SigninLogs\r\n| where TimeGenerated > ago(90d)\r\n| summarize arg_max(TimeGenerated, *) by UserPrincipalName\r\n| where UserPrincipalName contains \"{Search}\"\r\n| extend username = tostring(split(UserPrincipalName, \"@\")[0])\r\n| extend nameParts = split(username, \".\")\r\n| extend firstName = tostring(nameParts[0])\r\n| extend lastName = tostring(nameParts[-2])\r\n| extend compare = strcat(firstName, lastName)\r\n| extend compare = translate(\"-\", \"\", compare)\r\n| extend compare = replace(@\"[0-9]\", \"\", compare)\r\n| project Admin_UPN=UserPrincipalName, Admin_DisplayName=Identity, compare;\r\nlet nonAdminSignins = SigninLogs\r\n| where TimeGenerated > ago(90d)\r\n| summarize arg_max(TimeGenerated, *) by UserPrincipalName\r\n| where UserPrincipalName !contains \"{Search}\"\r\n| extend username = tostring(split(UserPrincipalName, \"@\")[0])\r\n| extend nameParts = split(username, \".\")\r\n| extend firstName = tostring(nameParts[0])\r\n| extend lastName = iif(strlen(nameParts[1]) == 1, tostring(nameParts[2]), tostring(nameParts[1]))\r\n| extend compare = strcat(firstName, lastName)\r\n| extend compare = translate(\"-\", \"\", compare)\r\n| extend compare = replace(@\"[0-9]\", \"\", compare)\r\n| project User_UPN=UserPrincipalName, User_DisplayName=Identity, compare;\r\nadminSignins\r\n| join kind=leftouter (\r\nnonAdminSignins\r\n) on compare\r\n| summarize Correlated_User_UPNs = make_list(User_UPN) by Admin_UPN, Admin_DisplayName\r\n| project \r\n    Admin_DisplayName,\r\n    Admin_UPN, \r\n    Count = array_length(Correlated_User_UPNs),\r\n    Sample_User = Correlated_User_UPNs[0],\r\n    Correlated_User_UPNs",
+              "size": 2,
+              "showAnalytics": true,
+              "title": "Attempting to Map Admin-to-User Over 90-Days",
+              "showExportToExcel": true,
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "Admin_DisplayName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "30ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Admin_UPN",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "45ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Sample_User",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "35ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Correlated_User_UPNs",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "35ch"
+                    }
+                  }
+                ],
+                "rowLimit": 10000,
+                "filter": true
+              }
+            },
+            "name": "Compare"
+          }
+        ]
+      },
+      "conditionalVisibility": {
+        "parameterName": "tab",
+        "comparison": "isEqualTo",
+        "value": "tab2"
+      },
+      "name": "Group2"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\r\n| where TimeGenerated > ago (90d)\r\n| where ResultSignature == \"SUCCESS\"\r\n| summarize arg_max(TimeGenerated, *) by UserPrincipalName\r\n| where UserPrincipalName contains \"{Search}\"\r\n| extend State = LocationDetails.state\r\n| extend City = LocationDetails.city\r\n| extend DeviceName = DeviceDetail.displayName\r\n| extend FirstName = split(Identity, \" \").[0]\r\n| extend LastName = split(Identity, \" \").[-2]  //Update to match your naming pattern\r\n| extend UPN_Prefix = split(UserPrincipalName, \"{Search}\").[0] //Update to match your naming pattern\r\n| extend UPN_Prefix2 = split(UserPrincipalName, \"@\").[0] \r\n| project LastSeen=TimeGenerated, DisplayName=Identity, UserPrincipalName, UserId, Country=Location, State, City, DeviceName, IPAddress, FirstName, LastName, UPN_Prefix, UPN_Prefix2",
+              "size": 1,
+              "title": "Admin Users - 90-Days Last Seen (Select for Details)",
+              "exportedParameters": [
+                {
+                  "fieldName": "UserPrincipalName",
+                  "parameterName": "UserPrincipalName",
+                  "parameterType": 1
+                },
+                {
+                  "fieldName": "UPN_Prefix",
+                  "parameterName": "UPN_Prefix",
+                  "parameterType": 1
+                },
+                {
+                  "fieldName": "FirstName",
+                  "parameterName": "FirstName",
+                  "parameterType": 1
+                },
+                {
+                  "fieldName": "LastName",
+                  "parameterName": "LastName",
+                  "parameterType": 1
+                },
+                {
+                  "fieldName": "UPN_Prefix2",
+                  "parameterName": "UPN_Prefix2",
+                  "parameterType": 1
+                }
+              ],
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "LastSeen",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "14ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DisplayName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "28ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserPrincipalName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "45ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserId",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "40ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Country",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "13ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "State",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "13ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "City",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "13ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DeviceName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "18ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "IPAddress",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "18ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "FirstName",
+                    "formatter": 5
+                  },
+                  {
+                    "columnMatch": "LastName",
+                    "formatter": 5
+                  },
+                  {
+                    "columnMatch": "UPN_Prefix",
+                    "formatter": 5
+                  }
+                ],
+                "rowLimit": 10000,
+                "filter": true
+              }
+            },
+            "name": "Signin Logs Query"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let adminSignins = SigninLogs\r\n| where TimeGenerated > ago(90d)\r\n| summarize arg_max(TimeGenerated, *) by UserPrincipalName\r\n| where UserPrincipalName contains \"{Search}\"\r\n| extend username = tostring(split(UserPrincipalName, \"@\")[0])\r\n| extend nameParts = split(username, \".\")\r\n| extend firstName = tostring(nameParts[0])\r\n| extend lastName = tostring(nameParts[-2])\r\n| extend compare = strcat(firstName, lastName)\r\n| extend compare = translate(\"-\", \"\", compare)\r\n| extend compare = replace(@\"[0-9]\", \"\", compare)\r\n| project Admin_UPN=UserPrincipalName, Admin_DisplayName=Identity, compare;\r\nlet nonAdminSignins = SigninLogs\r\n| where TimeGenerated > ago(90d)\r\n| where UserPrincipalName !contains \"{Search}\"\r\n| extend UPN_Prefix2 = tostring(split(UserPrincipalName, \"@\")[0])\r\n| extend nameParts = split(UPN_Prefix2, \".\")\r\n| extend firstName = tostring(nameParts[0])\r\n| extend lastName = iif(strlen(nameParts[1]) == 1, tostring(nameParts[2]), tostring(nameParts[1]))\r\n| extend compare = strcat(firstName, lastName)\r\n| extend compare = translate(\"-\", \"\", compare)\r\n| extend compare = replace(@\"[0-9]\", \"\", compare)\r\n| project \r\n    compare,\r\n    TimeGenerated, \r\n    DisplayName=Identity, \r\n    UserPrincipalName, \r\n    UserId, \r\n    Country=Location, \r\n    State=tostring(LocationDetails.state), \r\n    City=tostring(LocationDetails.city), \r\n    DeviceName=tostring(DeviceDetail.displayName), \r\n    IPAddress, UPN_Prefix2;\r\nadminSignins\r\n| join kind=leftouter (\r\n    nonAdminSignins\r\n) on compare\r\n| summarize arg_max(TimeGenerated, *) by UserPrincipalName\r\n| project \r\n    LastSeen=TimeGenerated,\r\n    Admin_DisplayName,   \r\n    User_DisplayName=DisplayName, \r\n    User_Email=UserPrincipalName, \r\n    Country, \r\n    State, \r\n    City, \r\n    DeviceName, \r\n    IPAddress, Admin_UPN, UPN_Prefix2\r\n| where Admin_UPN == \"{UserPrincipalName}\"",
+              "size": 4,
+              "title": "Potential Contact User Account (Select for Details)",
+              "timeContextFromParameter": "TimeGenerated",
+              "exportedParameters": [
+                {
+                  "fieldName": "UPN_Prefix",
+                  "parameterName": "UPN_Prefix",
+                  "parameterType": 1
+                },
+                {
+                  "fieldName": "User_Email",
+                  "parameterName": "UserPrincipalName",
+                  "parameterType": 1
+                },
+                {
+                  "fieldName": "FirstName",
+                  "parameterName": "FirstName",
+                  "parameterType": 1
+                },
+                {
+                  "fieldName": "LastName",
+                  "parameterName": "LastName",
+                  "parameterType": 1
+                },
+                {
+                  "fieldName": "UPN_Prefix2",
+                  "parameterName": "UPN_Prefix2",
+                  "parameterType": 1,
+                  "defaultValue": ""
+                }
+              ],
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "LastSeen",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Admin_DisplayName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "30ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "User_DisplayName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "30ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "User_Email",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "30ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Country",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "14ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "State",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "14ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "City",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "14ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DeviceName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "18ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "IPAddress",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "17ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Admin_UPN",
+                    "formatter": 5
+                  },
+                  {
+                    "columnMatch": "UPN_Prefix2",
+                    "formatter": 5
+                  }
+                ],
+                "rowLimit": 10000
+              }
+            },
+            "conditionalVisibility": {
+              "parameterName": "UPN_Prefix",
+              "comparison": "isNotEqualTo"
+            },
+            "name": "Potential Contact User Account (Select for Details)"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\r\n| where TimeGenerated > ago (90d)\r\n| where UserPrincipalName == \"{UserPrincipalName}\"\r\n| summarize count() by bin(TimeGenerated, 1d), Status=ResultSignature",
+              "size": 4,
+              "title": "User Signin History (90 Days + Time Brush)",
+              "timeBrushParameterName": "TimeSpan",
+              "exportedParameters": [
+                {
+                  "fieldName": "TimeSpan",
+                  "parameterName": "TimeSpan",
+                  "parameterType": 4,
+                  "plus": "24h",
+                  "minus": "24h"
+                }
+              ],
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "visualization": "timechart",
+              "gridSettings": {
+                "rowLimit": 10000
+              }
+            },
+            "conditionalVisibility": {
+              "parameterName": "UPN_Prefix",
+              "comparison": "isNotEqualTo"
+            },
+            "name": "User Signin History (90 Days)"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\r\n| where UserPrincipalName == \"{UserPrincipalName}\"\r\n| extend State = LocationDetails.state\r\n| extend City = LocationDetails.city\r\n| extend DeviceName = DeviceDetail.displayName\r\n| extend Browser = DeviceDetail.browser\r\n| extend OS = DeviceDetail.operatingSystem\r\n| extend NetworkType = parse_json(NetworkLocationDetails)[1].networkType\r\n| extend Network = parse_json(tostring(parse_json(NetworkLocationDetails)[1].networkNames))[0]\r\n| extend icon = ResultSignature\r\n| project TimeGenerated, ['🚪Signin']=icon, Status=ResultSignature, RiskState, AppDisplayName, DisplayName=Identity, UserPrincipalName, UserId, UserType, Country=Location, State, City, DeviceName, OS, Browser, IPAddress, Network, NetworkType, MFA=AuthenticationRequirement, CA_Status=ConditionalAccessStatus",
+              "size": 1,
+              "showAnalytics": true,
+              "title": " User Signin History",
+              "timeContextFromParameter": "TimeSpan",
+              "showExportToExcel": true,
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "TimeGenerated",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "🚪",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "icons",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "==",
+                          "thresholdValue": "SUCCESS",
+                          "representation": "success",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "Default",
+                          "thresholdValue": null,
+                          "representation": "warning",
+                          "text": "{0}{1}"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "columnMatch": "Status",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "RiskState",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "11ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "AppDisplayName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "28ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DisplayName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "28ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserPrincipalName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "45ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserId",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "36ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserType",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "14ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Country",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "13ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "State",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "13ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "City",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "13ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DeviceName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "OS",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Browser",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "16ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "IPAddress",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "16ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Network",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "NetworkType",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "18ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "MFA",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "CA_Status",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "14ch"
+                    }
+                  }
+                ],
+                "rowLimit": 10000
+              }
+            },
+            "conditionalVisibility": {
+              "parameterName": "UPN_Prefix",
+              "comparison": "isNotEqualTo"
+            },
+            "name": "User Signin History"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let IncidentAlerts = SecurityIncident\r\n| where TimeGenerated > ago(30d)\r\n| summarize arg_max(TimeGenerated, * ) by IncidentName\r\n| mv-expand todynamic(AlertIds)\r\n| extend AlertId = tostring(AlertIds)\r\n| project TimeGenerated, Status, Severity, Title, ProviderName, IncidentUrl, AlertId;\r\nlet AlertEntities = SecurityAlert \r\n| summarize arg_max(TimeGenerated, * ) by SystemAlertId\r\n| where Entities contains \"account\"\r\n| mv-expand todynamic(Entities)\r\n| where Entities.Type == 'account'\r\n| extend AccountName = tostring(Entities.Name)\r\n| where AccountName == \"{UPN_Prefix2}\"\r\n| project TimeGenerated, AccountName, SystemAlertId;\r\nIncidentAlerts\r\n| join kind=inner AlertEntities on $left.AlertId == $right.SystemAlertId\r\n| project-away TimeGenerated1, AlertId, SystemAlertId, AccountName\r\n| sort by TimeGenerated",
+              "size": 1,
+              "showAnalytics": true,
+              "title": "Related Incident History (30 Days)",
+              "noDataMessage": "No recent incidents for this user",
+              "showExportToExcel": true,
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "TimeGenerated",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Status",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Severity",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Title",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "60ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "ProviderName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "18ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "IncidentUrl",
+                    "formatter": 7,
+                    "formatOptions": {
+                      "linkTarget": "Url",
+                      "linkLabel": "Click to View Details",
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  }
+                ],
+                "rowLimit": 10000,
+                "sortBy": [
+                  {
+                    "itemKey": "Severity",
+                    "sortOrder": 2
+                  }
+                ]
+              },
+              "sortBy": [
+                {
+                  "itemKey": "Severity",
+                  "sortOrder": 2
+                }
+              ]
+            },
+            "conditionalVisibility": {
+              "parameterName": "UPN_Prefix",
+              "comparison": "isNotEqualTo"
+            },
+            "name": "Related Incidents"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "IdentityInfo\r\n| where TimeGenerated > ago(30d)\r\n| summarize arg_max(TimeGenerated, *) by AccountUPN\r\n| where AccountUPN == \"{UserPrincipalName}\"\r\n| extend RiskLevel = tostring(iif(isempty( RiskLevel), \"Unknown\", RiskLevel))\r\n| extend RiskState = tostring(iif(isempty( RiskState), \"Unknown\", RiskState))\r\n| mv-expand todynamic(GroupMembership)\r\n| mv-expand todynamic(AssignedRoles)\r\n| project TimeGenerated, AccountDisplayName, RiskLevel, RiskState, Enabled=IsAccountEnabled, UserType, GroupMembership, AssignedRoles, Department, JobTitle, StreetAddress, Country, State, City, Phone",
+              "size": 1,
+              "showAnalytics": true,
+              "title": "Identity & Role Details",
+              "noDataMessage": "No IdentityInfo data for this user (AD centric log)",
+              "showExportToExcel": true,
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "TimeGenerated",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "AccountDisplayName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "RiskLevel",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "RiskState",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Enabled",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserType",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "GroupMembership",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "AssignedRoles",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Department",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "JobTitle",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "StreetAddress",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Country",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "State",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Status",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Severity",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Title",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "60ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "ProviderName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "18ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "IncidentUrl",
+                    "formatter": 7,
+                    "formatOptions": {
+                      "linkTarget": "Url",
+                      "linkLabel": "Click to View Details",
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  }
+                ],
+                "rowLimit": 10000
+              },
+              "sortBy": []
+            },
+            "conditionalVisibility": {
+              "parameterName": "UPN_Prefix",
+              "comparison": "isNotEqualTo"
+            },
+            "name": "Identity Details"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "BehaviorAnalytics\r\n| where TimeGenerated > ago(9d)\r\n| where UserPrincipalName == \"{UserPrincipalName}\"\r\n| extend Uncommon = tostring(ActivityInsights.ActionUncommonlyPerformedByUser)\r\n| extend HighVolume = tostring(ActivityInsights.UncommonHighVolumeOfActions)\r\n| where Uncommon == \"True\" or HighVolume == \"True\" //remove to see all\r\n| project TimeGenerated, UserPrincipalName, Priority=InvestigationPriority, Uncommon, HighVolume, ActionType, ActivityType, EventSource, SourceDevice, SourceIPAddress, SourceIPLocation\r\n| sort by TimeGenerated",
+              "size": 1,
+              "showAnalytics": true,
+              "title": "Possible Unusual Behavior (90 Days)",
+              "noDataMessage": "No unusual behaviors detected by Sentinel",
+              "showExportToExcel": true,
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "TimeGenerated",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserPrincipalName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Priority",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Uncommon",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "HighVolume",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "ActionType",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "ActivityType",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "EventSource",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "SourceDevice",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "SourceIPAddress",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "SourceIPLocation",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "InvestigationPriority",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  }
+                ],
+                "rowLimit": 10000
+              },
+              "sortBy": []
+            },
+            "conditionalVisibility": {
+              "parameterName": "UPN_Prefix",
+              "comparison": "isNotEqualTo"
+            },
+            "name": "Possible Unusual Behavior"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let baseUrl = \"https://security.microsoft.us\"; // Change to \"https://security.microsoft.us\" for government clouds\r\nDeviceLogonEvents\r\n| where TimeGenerated > ago(60d)\r\n| where AccountName == \"{UserPrincipalName}\"\r\n| summarize arg_max(TimeGenerated, *) by DeviceId\r\n| join (\r\n    DeviceInfo\r\n    | summarize arg_max(TimeGenerated, *) by DeviceId\r\n) on DeviceId\r\n| join kind=leftouter (\r\n    AlertEvidence\r\n    | where DeviceId != \"\"\r\n    | summarize AlertCount = dcount(AlertId) by DeviceId\r\n) on DeviceId\r\n| project\r\n    LastSeen = TimeGenerated,\r\n    DeviceName,\r\n    OSPlatform,\r\n    AlertCount = todouble(AlertCount),\r\n    MDE_Onboarding = OnboardingStatus,\r\n    MDE_Status = SensorHealthState,\r\n    ExposureLevel,\r\n    PublicIP,\r\n    DeviceProfileUrl = strcat(baseUrl, \"/machines/\", DeviceId),\r\n    DeviceId | order by LastSeen",
+              "size": 1,
+              "showAnalytics": true,
+              "title": "Related Device Activity (60 Days)",
+              "noDataMessage": "No devices detected for this user (good for admins)",
+              "showExportToExcel": true,
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "LastSeen",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DeviceName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "OSPlatform",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "AlertCount",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "MDE_Onboarding",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "MDE_Status",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "ExposureLevel",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "PublicIP",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DeviceProfileUrl",
+                    "formatter": 7,
+                    "formatOptions": {
+                      "linkTarget": "Url",
+                      "linkLabel": "Click for Device Page",
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DeviceId",
+                    "formatter": 5
+                  }
+                ],
+                "rowLimit": 10000
+              },
+              "sortBy": []
+            },
+            "conditionalVisibility": {
+              "parameterName": "UPN_Prefix",
+              "comparison": "isNotEqualTo"
+            },
+            "name": "Related Device Activity"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "AuditLogs\r\n| where OperationName contains \"requested (PIM activation)\"\r\n//| where Result == \"success\"\r\n| extend UPN = tostring(InitiatedBy.user.userPrincipalName)\r\n| extend Role0 = tostring(TargetResources[0].displayName)\r\n| extend Role1 = tostring(TargetResources[1].displayName)\r\n| extend Role3 = tostring(TargetResources[3].displayName)\r\n| mv-expand AD = AdditionalDetails\r\n| extend ADKey = tostring(AD.key), ADValue = tostring(AD.value)\r\n| summarize\r\n    CommentFromDetails = anyif(ADValue, ADKey =~ \"Justification\"),\r\n    Source_IP = anyif(ADValue, ADKey =~ \"ipaddr\")\r\n    by TimeGenerated, Identity, UPN, Category, Result, OperationName, ResultDescription, Role0, Role1, Role3\r\n| extend Comment = iff(Category == \"GroupManagement\", ResultDescription, CommentFromDetails)\r\n| extend Role = case(\r\n    Category == \"GroupManagement\" and isnotempty(Role1), Role1,\r\n    Role0 == \"Member\" and isnotempty(Role3), Role3,\r\n    isnotempty(Role1) and isempty(Role0), Role1,\r\n    Role0\r\n)\r\n| project TimeGenerated, Identity, UPN, Role, Category, Comment, Source_IP, Result\r\n| where UPN == \"{UserPrincipalName}\"",
+              "size": 1,
+              "showAnalytics": true,
+              "title": "PIM Request History",
+              "noDataMessage": "No PIM activity detected for this user",
+              "timeContextFromParameter": "TimeGenerated",
+              "showExportToExcel": true,
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "TimeGenerated",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DisplayName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "26ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserPrincipalName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "44ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Role",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  }
+                ],
+                "rowLimit": 10000
+              }
+            },
+            "conditionalVisibility": {
+              "parameterName": "UPN_Prefix",
+              "comparison": "isNotEqualTo"
+            },
+            "name": "PIM Request History"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "AzureActivity\r\n| where Caller == \"{UserPrincipalName}\"\r\n| where ActivityStatusValue == \"Success\"\r\n| extend Action = parse_json(Properties).message\r\n| extend Resource = parse_json(Properties).resource\r\n| project TimeGenerated, Caller, OperationNameValue, Action, ResourceGroup, SubscriptionId, CallerIpAddress, Resource, _ResourceId",
+              "size": 1,
+              "showAnalytics": true,
+              "title": "Azure Activity",
+              "noDataMessage": "No Azure changes detected for this user",
+              "timeContextFromParameter": "TimeGenerated",
+              "showExportToExcel": true,
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "TimeGenerated",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Caller",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "40ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "OperationNameValue",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "38ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Action",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "34ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "ResourceGroup",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "30ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "SubscriptionId",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "42ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "CallerIpAddress",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Resource",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "30ch"
+                    }
+                  }
+                ],
+                "rowLimit": 10000
+              }
+            },
+            "conditionalVisibility": {
+              "parameterName": "UPN_Prefix",
+              "comparison": "isNotEqualTo"
+            },
+            "name": "Azure Activity"
+          }
+        ]
+      },
+      "conditionalVisibility": {
+        "parameterName": "tab",
+        "comparison": "isEqualTo",
+        "value": "tab1"
+      },
+      "name": "Group1"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 9,
+            "content": {
+              "version": "KqlParameterItem/1.0",
+              "parameters": [
+                {
+                  "id": "062d73b0-2842-4eb7-94f4-1ab9b8bec40d",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "RiskTIme",
+                  "label": "Risk Lookback",
+                  "type": 4,
+                  "description": "How far back to look for user risk flags",
+                  "isRequired": true,
+                  "typeSettings": {
+                    "selectableValues": [
+                      {
+                        "durationMs": 300000
+                      },
+                      {
+                        "durationMs": 900000
+                      },
+                      {
+                        "durationMs": 1800000
+                      },
+                      {
+                        "durationMs": 3600000
+                      },
+                      {
+                        "durationMs": 14400000
+                      },
+                      {
+                        "durationMs": 43200000
+                      },
+                      {
+                        "durationMs": 86400000
+                      },
+                      {
+                        "durationMs": 172800000
+                      },
+                      {
+                        "durationMs": 259200000
+                      },
+                      {
+                        "durationMs": 604800000
+                      },
+                      {
+                        "durationMs": 1209600000
+                      },
+                      {
+                        "durationMs": 2419200000
+                      },
+                      {
+                        "durationMs": 2592000000
+                      }
+                    ]
+                  },
+                  "timeContext": {
+                    "durationMs": 86400000
+                  },
+                  "value": {
+                    "durationMs": 86400000
+                  }
+                },
+                {
+                  "id": "8002a4a2-12bf-4387-8172-e375e1645b32",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "UserType",
+                  "label": "User Type",
+                  "type": 2,
+                  "isRequired": true,
+                  "multiSelect": true,
+                  "quote": "'",
+                  "delimiter": ",",
+                  "query": "{\"version\":\"1.0.0\",\"content\":\"[\\r\\n  {\\r\\n    \\\"value\\\": \\\"Member\\\",\\r\\n    \\\"label\\\": \\\"Member\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Guest\\\",\\r\\n    \\\"label\\\": \\\"Guest\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"passthrough\\\",\\r\\n    \\\"label\\\": \\\"passthrough\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"b2bDirectConnect\\\",\\r\\n    \\\"label\\\": \\\"b2bDirectConnect\\\"\\r\\n  }\\r\\n]\",\"transformers\":null}",
+                  "typeSettings": {
+                    "additionalResourceOptions": [
+                      "value::all"
+                    ],
+                    "showDefault": false
+                  },
+                  "timeContext": {
+                    "durationMs": 86400000
+                  },
+                  "defaultValue": "value::all",
+                  "queryType": 8,
+                  "value": [
+                    "Member"
+                  ]
+                },
+                {
+                  "version": "KqlParameterItem/1.0",
+                  "name": "RiskLevel",
+                  "label": "Risk Level",
+                  "type": 2,
+                  "description": "Included risk level before success",
+                  "isRequired": true,
+                  "multiSelect": true,
+                  "quote": "'",
+                  "delimiter": ",",
+                  "query": "{\"version\":\"1.0.0\",\"content\":\"[\\r\\n  {\\r\\n    \\\"value\\\": \\\"low\\\",\\r\\n    \\\"label\\\": \\\"Low\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"medium\\\",\\r\\n    \\\"label\\\": \\\"Medium\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"high\\\",\\r\\n    \\\"label\\\": \\\"High\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"none\\\",\\r\\n    \\\"label\\\": \\\"None\\\"\\r\\n  }\\r\\n]\",\"transformers\":null}",
+                  "typeSettings": {
+                    "additionalResourceOptions": [
+                      "value::all"
+                    ],
+                    "showDefault": false
+                  },
+                  "timeContext": {
+                    "durationMs": 86400000
+                  },
+                  "defaultValue": "value::all",
+                  "queryType": 8,
+                  "id": "aeb06e77-0347-446c-b5be-b5f52e52237e",
+                  "value": [
+                    "high",
+                    "medium"
+                  ]
+                },
+                {
+                  "version": "KqlParameterItem/1.0",
+                  "name": "RiskState",
+                  "label": "Risk State",
+                  "type": 2,
+                  "description": "Included risk level before success",
+                  "isRequired": true,
+                  "multiSelect": true,
+                  "quote": "'",
+                  "delimiter": ",",
+                  "query": "{\"version\":\"1.0.0\",\"content\":\"[\\r\\n  {\\r\\n    \\\"value\\\": \\\"atRisk\\\",\\r\\n    \\\"label\\\": \\\"atRisk\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"dismissed\\\",\\r\\n    \\\"label\\\": \\\"Dismissed\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"remediated\\\",\\r\\n    \\\"label\\\": \\\"Remediated\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"confirmedSafe\\\",\\r\\n    \\\"label\\\": \\\"ConfirmedSafe\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"none\\\",\\r\\n    \\\"label\\\": \\\"None\\\"\\r\\n  }\\r\\n]\",\"transformers\":null}",
+                  "typeSettings": {
+                    "additionalResourceOptions": [
+                      "value::all"
+                    ],
+                    "showDefault": false
+                  },
+                  "timeContext": {
+                    "durationMs": 86400000
+                  },
+                  "defaultValue": "value::all",
+                  "queryType": 8,
+                  "id": "76c86236-7114-4ecd-8891-ebee433d8ab9",
+                  "value": [
+                    "atRisk",
+                    "dismissed",
+                    "remediated",
+                    "confirmedSafe"
+                  ]
+                },
+                {
+                  "version": "KqlParameterItem/1.0",
+                  "name": "Method",
+                  "label": "Verification Method",
+                  "type": 2,
+                  "description": "Included risk state before success",
+                  "isRequired": true,
+                  "multiSelect": true,
+                  "quote": "'",
+                  "delimiter": ",",
+                  "query": "{\"version\":\"1.0.0\",\"content\":\"[\\r\\n  {\\r\\n    \\\"value\\\": \\\"Companion mobile app notification\\\",\\r\\n    \\\"label\\\": \\\"Companion mobile app notification\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Email verification code\\\",\\r\\n    \\\"label\\\": \\\"Email verification code\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"MacOS Platform Credentials\\\",\\r\\n    \\\"label\\\": \\\"MacOS Platform Credentials\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Mobile app notification\\\",\\r\\n    \\\"label\\\": \\\"Mobile app notification\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"OATH verification code\\\",\\r\\n    \\\"label\\\": \\\"OATH verification code\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Passkey (device-bound)\\\",\\r\\n    \\\"label\\\": \\\"Passkey (device-bound)\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Password\\\",\\r\\n    \\\"label\\\": \\\"Password\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Passwordless phone sign-in\\\",\\r\\n    \\\"label\\\": \\\"Passwordless phone sign-in\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Phone call approval (Alternate phone)\\\",\\r\\n    \\\"label\\\": \\\"Phone call approval (Alternate phone)\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Phone call approval (Authentication phone)\\\",\\r\\n    \\\"label\\\": \\\"Phone call approval (Authentication phone)\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Phone call approval (Office phone)\\\",\\r\\n    \\\"label\\\": \\\"Phone call approval (Office phone)\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Previously satisfied\\\",\\r\\n    \\\"label\\\": \\\"Previously satisfied\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Temporary Access Pass\\\",\\r\\n    \\\"label\\\": \\\"Temporary Access Pass\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Unknown\\\",\\r\\n    \\\"label\\\": \\\"Unknown\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Windows Hello for Business\\\",\\r\\n    \\\"label\\\": \\\"Windows Hello for Business\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"X.509 Certificate\\\",\\r\\n    \\\"label\\\": \\\"X.509 Certificate\\\"\\r\\n  }\\r\\n]\",\"transformers\":null}",
+                  "typeSettings": {
+                    "additionalResourceOptions": [
+                      "value::all"
+                    ],
+                    "showDefault": false
+                  },
+                  "timeContext": {
+                    "durationMs": 86400000
+                  },
+                  "defaultValue": "value::all",
+                  "queryType": 8,
+                  "value": [
+                    "Unknown",
+                    "Temporary Access Pass",
+                    "Previously satisfied",
+                    "Password",
+                    "Companion mobile app notification"
+                  ],
+                  "id": "4f67a9d5-258b-46cd-8626-ebf0b7f5f346"
+                },
+                {
+                  "version": "KqlParameterItem/1.0",
+                  "name": "CA_Status",
+                  "type": 2,
+                  "description": "Conditional access applied to successfull signin results",
+                  "isRequired": true,
+                  "multiSelect": true,
+                  "quote": "'",
+                  "delimiter": ",",
+                  "query": "{\"version\":\"1.0.0\",\"content\":\"[\\r\\n  {\\r\\n    \\\"value\\\": \\\"success\\\",\\r\\n    \\\"label\\\": \\\"Success\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"notApplied\\\",\\r\\n    \\\"label\\\": \\\"Not Applied\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"failure\\\",\\r\\n    \\\"label\\\": \\\"Failure\\\"\\r\\n  }\\r\\n]\",\"transformers\":null}",
+                  "typeSettings": {
+                    "additionalResourceOptions": [
+                      "value::all"
+                    ],
+                    "showDefault": false
+                  },
+                  "timeContext": {
+                    "durationMs": 86400000
+                  },
+                  "defaultValue": "value::all",
+                  "queryType": 8,
+                  "id": "7cf3d0b0-36bf-4395-acab-ca86ee3e9c96"
+                }
+              ],
+              "style": "above",
+              "queryType": 8
+            },
+            "name": "parameters - 6"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let UserRisk = SigninLogs\r\n| where ResultType != 0\r\n| extend Method = tostring(parse_json(AuthenticationDetails)[0].authenticationMethod)\r\n| where RiskState in ({RiskState}) or RiskLevelDuringSignIn in ({RiskLevel}) or Method in ({Method})\r\n| where UserPrincipalName contains \"@\"\r\n| summarize arg_max(TimeGenerated, *) by UserPrincipalName;\r\nlet Success = SigninLogs\r\n| where ResultType == 0 //Success\r\n| where UserType in ({UserType})\r\n| where ConditionalAccessStatus in ({CA_Status})\r\n| summarize arg_max(TimeGenerated, *) by UserPrincipalName;\r\nUserRisk\r\n| join kind=rightantisemi Success on UserPrincipalName\r\n| extend State = LocationDetails.state\r\n| extend City = LocationDetails.city\r\n| extend DeviceName = DeviceDetail.displayName\r\n| extend FirstName = split(UserPrincipalName, \".\").[0]\r\n| extend LastName = split(UserPrincipalName, \".\").[1]\r\n| extend LastName = iif(strlen(split(UserPrincipalName, \".\").[1]) > 1, split(UserPrincipalName, \".\").[1], split(UserPrincipalName, \".\").[2])\r\n| extend Verification = tostring(parse_json(AuthenticationDetails)[0].authenticationMethod)\r\n| extend UPN_Prefix = tostring(split(UserPrincipalName, \"@\").[0])\r\n| extend Key = tostring(parse_json(AuthenticationProcessingDetails)[0].key)\r\n| extend isCrossTenant = iif(CrossTenantAccessType == \"none\", \"tenant_local\", CrossTenantAccessType)\r\n| extend MFA_Type = iif(AuthenticationRequirement == \"multiFactorAuthentication\", \"multiFactor\", \"singleFactor\") \r\n| extend UserType = iif(isempty( UserType), CrossTenantAccessType, UserType)\r\n| project TimeGenerated, Result=ResultSignature,DisplayName=Identity, UserPrincipalName, UserId, UserType, RiskState, SignInRisk=RiskLevelDuringSignIn, Verification,CA_Status=ConditionalAccessStatus, isCrossTenant, MFA_Type, Key, Country=Location, State, City, DeviceName, IPAddress, FirstName, LastName, UPN_Prefix\r\n\r\n",
+              "size": 1,
+              "showAnalytics": true,
+              "title": "Successful but Recent Risky or Weak Auth Signins (Select for Details)",
+              "timeContextFromParameter": "RiskTIme",
+              "exportedParameters": [
+                {
+                  "fieldName": "UserPrincipalName",
+                  "parameterName": "UserPrincipalName",
+                  "parameterType": 1
+                },
+                {
+                  "fieldName": "UPN_Prefix",
+                  "parameterName": "UPN_Prefix",
+                  "parameterType": 1
+                },
+                {
+                  "fieldName": "FirstName",
+                  "parameterName": "FirstName",
+                  "parameterType": 1
+                },
+                {
+                  "fieldName": "LastName",
+                  "parameterName": "LastName",
+                  "parameterType": 1
+                }
+              ],
+              "showExportToExcel": true,
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "TimeGenerated",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "13ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Result",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "13ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DisplayName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "30ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserPrincipalName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "30ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserId",
+                    "formatter": 5,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "40ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserType",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "13ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "RiskState",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "13ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "SignInRisk",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "13ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Verification",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "13ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "CA_Status",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "13ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "isCrossTenant",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "13ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "MFA_Type",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "13ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Key",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "13ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Country",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "13ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "State",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "13ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "City",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "13ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DeviceName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "18ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "IPAddress",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "18ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "FirstName",
+                    "formatter": 5
+                  },
+                  {
+                    "columnMatch": "LastName",
+                    "formatter": 5
+                  },
+                  {
+                    "columnMatch": "UPN_Prefix",
+                    "formatter": 5
+                  }
+                ],
+                "rowLimit": 10000,
+                "filter": true
+              }
+            },
+            "name": "Ricky User Review"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\r\n| where TimeGenerated > ago(90d)\r\n| where UserPrincipalName == \"{UserPrincipalName}\"\r\n| summarize count() by bin(TimeGenerated, 1d), Status=ResultSignature",
+              "size": 4,
+              "title": "User Signin History (90 Days + Time Brush)",
+              "timeBrushParameterName": "TimeSpan",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "visualization": "timechart",
+              "gridSettings": {
+                "rowLimit": 10000
+              }
+            },
+            "conditionalVisibility": {
+              "parameterName": "UPN_Prefix",
+              "comparison": "isNotEqualTo"
+            },
+            "name": "User Signin History (90 Days + Time Brush)"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\r\n| where UserPrincipalName == \"{UserPrincipalName}\"\r\n| extend State = LocationDetails.state\r\n| extend City = LocationDetails.city\r\n| extend DeviceName = DeviceDetail.displayName\r\n| extend Browser = DeviceDetail.browser\r\n| extend OS = DeviceDetail.operatingSystem\r\n| extend UPN_Prefix2 = split(UserPrincipalName, \"@\").[0]\r\n| extend NetworkType = parse_json(NetworkLocationDetails)[1].networkType\r\n| extend Network = parse_json(tostring(parse_json(NetworkLocationDetails)[1].networkNames))[0]\r\n| extend MFA_Type = iif(AuthenticationRequirement == \"multiFactorAuthentication\", \"multiFactor\", \"singleFactor\") \r\n| extend icon = ResultSignature\r\n| extend isCrossTenant = iif(CrossTenantAccessType == \"none\", \"tenant_local\", CrossTenantAccessType)\r\n| extend Verification = tostring(parse_json(AuthenticationDetails)[0].authenticationMethod)\r\n| extend Key = tostring(parse_json(AuthenticationProcessingDetails)[0].key)\r\n| project TimeGenerated, ['🚪Signin']=icon, Status=ResultSignature, RiskState, DisplayName=Identity, UserPrincipalName, UserId, UserType, MFA_Type, CA_Status=ConditionalAccessStatus, Verification, isCrossTenant, Key, AppDisplayName, Country=Location, State, City, DeviceName, OS, Browser, IPAddress, Network, NetworkType",
+              "size": 1,
+              "title": "User Signin History",
+              "timeContextFromParameter": "TimeSpan",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "TimeGenerated",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "🚪",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "icons",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "==",
+                          "thresholdValue": "SUCCESS",
+                          "representation": "success",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "Default",
+                          "thresholdValue": null,
+                          "representation": "warning",
+                          "text": "{0}{1}"
+                        }
+                      ],
+                      "customColumnWidthSetting": "14ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Status",
+                    "formatter": 5,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "RiskState",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "11ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DisplayName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "30ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserPrincipalName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "30ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserId",
+                    "formatter": 5,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "36ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserType",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "14ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "MFA_Type",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "14ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "CA_Status",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "14ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Verification",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "14ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "isCrossTenant",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "14ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Key",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "14ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "AppDisplayName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "28ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Country",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "13ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "State",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "13ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "City",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "13ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DeviceName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "OS",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Browser",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "16ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "IPAddress",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "16ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Network",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "NetworkType",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "18ch"
+                    }
+                  }
+                ],
+                "rowLimit": 10000
+              }
+            },
+            "conditionalVisibility": {
+              "parameterName": "UPN_Prefix",
+              "comparison": "isNotEqualTo"
+            },
+            "name": "User Signin History"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\r\n| where UserPrincipalName startswith \"{UPN_Prefix}\" or (Identity contains \"{FirstName}\" and Identity contains \"{LastName}\")\r\n| extend UPN_Prefix = split(UserPrincipalName, \"@\").[0]\r\n| extend UPN_Prefix = split(UPN_Prefix, \".\").[-1]\r\n//| where UPN_Prefix != \"admin\"\r\n| summarize arg_max(TimeGenerated, *) by UserPrincipalName\r\n| extend State = LocationDetails.state\r\n| extend City = LocationDetails.city\r\n| extend DeviceName = DeviceDetail.displayName\r\n| project TimeGenerated, DisplayName=Identity, UserPrincipalName, UserId, Country=Location, State, City, DeviceName, IPAddress",
+              "size": 4,
+              "title": "Similar User Accounts",
+              "timeContextFromParameter": "TimeGenerated",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "TimeGenerated",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DisplayName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "30ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserPrincipalName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "36ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserId",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "38ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Country",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "14ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "State",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "14ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "City",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "14ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DeviceName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "18ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "IPAddress",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "17ch"
+                    }
+                  }
+                ],
+                "rowLimit": 10000
+              }
+            },
+            "conditionalVisibility": {
+              "parameterName": "UPN_Prefix",
+              "comparison": "isNotEqualTo"
+            },
+            "name": "Similar User Accounts"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let IncidentAlerts = SecurityIncident\r\n| where TimeGenerated > ago(30d)\r\n| summarize arg_max(TimeGenerated, * ) by IncidentName\r\n| mv-expand todynamic(AlertIds)\r\n| extend AlertId = tostring(AlertIds)\r\n| project TimeGenerated, Status, Severity, Title, ProviderName, IncidentUrl, AlertId;\r\nlet AlertEntities = SecurityAlert \r\n| summarize arg_max(TimeGenerated, * ) by SystemAlertId\r\n| where Entities contains \"account\"\r\n| mv-expand todynamic(Entities)\r\n| where Entities.Type == 'account'\r\n| extend AccountName = tostring(Entities.Name)\r\n| where AccountName == \"{UPN_Prefix}\"\r\n| project TimeGenerated, AccountName, SystemAlertId;\r\nIncidentAlerts\r\n| join kind=inner AlertEntities on $left.AlertId == $right.SystemAlertId\r\n| project-away TimeGenerated1, AlertId, SystemAlertId, AccountName\r\n| sort by TimeGenerated",
+              "size": 1,
+              "showAnalytics": true,
+              "title": "Related Incident History (30 Days)",
+              "noDataMessage": "No recent incidents for this user",
+              "showExportToExcel": true,
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "TimeGenerated",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Status",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Severity",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Title",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "60ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "ProviderName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "18ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "IncidentUrl",
+                    "formatter": 7,
+                    "formatOptions": {
+                      "linkTarget": "Url",
+                      "linkLabel": "Click to View Details",
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  }
+                ],
+                "rowLimit": 10000,
+                "sortBy": [
+                  {
+                    "itemKey": "Severity",
+                    "sortOrder": 2
+                  }
+                ]
+              },
+              "sortBy": [
+                {
+                  "itemKey": "Severity",
+                  "sortOrder": 2
+                }
+              ]
+            },
+            "conditionalVisibility": {
+              "parameterName": "UPN_Prefix",
+              "comparison": "isNotEqualTo"
+            },
+            "name": "Related Incidents - Copy"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "IdentityInfo\r\n| where TimeGenerated > ago(30d)\r\n| summarize arg_max(TimeGenerated, *) by AccountUPN\r\n| where AccountUPN == \"{UserPrincipalName}\"\r\n| extend RiskLevel = tostring(iif(isempty( RiskLevel), \"Unknown\", RiskLevel))\r\n| extend RiskState = tostring(iif(isempty( RiskState), \"Unknown\", RiskState))\r\n| mv-expand todynamic(GroupMembership)\r\n| mv-expand todynamic(AssignedRoles)\r\n| project TimeGenerated, AccountDisplayName, RiskLevel, RiskState, Enabled=IsAccountEnabled, UserType, GroupMembership, AssignedRoles, Department, JobTitle, StreetAddress, Country, State, City, Phone",
+              "size": 1,
+              "showAnalytics": true,
+              "title": "Identity & Role Details",
+              "noDataMessage": "No IdentityInfo data for this user (AD centric log)",
+              "showExportToExcel": true,
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "TimeGenerated",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "AccountDisplayName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "RiskLevel",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "RiskState",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Enabled",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserType",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "GroupMembership",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "AssignedRoles",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Department",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "JobTitle",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "StreetAddress",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Country",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "State",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Status",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Severity",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Title",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "60ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "ProviderName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "18ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "IncidentUrl",
+                    "formatter": 7,
+                    "formatOptions": {
+                      "linkTarget": "Url",
+                      "linkLabel": "Click to View Details",
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  }
+                ],
+                "rowLimit": 10000
+              },
+              "sortBy": []
+            },
+            "conditionalVisibility": {
+              "parameterName": "UPN_Prefix",
+              "comparison": "isNotEqualTo"
+            },
+            "name": "Identity Details - Copy"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "BehaviorAnalytics\r\n| where TimeGenerated > ago(9d)\r\n| where UserPrincipalName == \"{UserPrincipalName}\"\r\n| extend Uncommon = tostring(ActivityInsights.ActionUncommonlyPerformedByUser)\r\n| extend HighVolume = tostring(ActivityInsights.UncommonHighVolumeOfActions)\r\n| where Uncommon == \"True\" or HighVolume == \"True\" //remove to see all\r\n| project TimeGenerated, UserPrincipalName, Priority=InvestigationPriority, Uncommon, HighVolume, ActionType, ActivityType, EventSource, SourceDevice, SourceIPAddress, SourceIPLocation\r\n| sort by TimeGenerated",
+              "size": 1,
+              "showAnalytics": true,
+              "title": "Possible Unusual Behavior (90 Days)",
+              "noDataMessage": "No unusual behaviors detected by Sentinel",
+              "showExportToExcel": true,
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "TimeGenerated",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserPrincipalName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Priority",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Uncommon",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "HighVolume",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "ActionType",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "ActivityType",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "EventSource",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "SourceDevice",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "SourceIPAddress",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "SourceIPLocation",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "InvestigationPriority",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  }
+                ],
+                "rowLimit": 10000
+              },
+              "sortBy": []
+            },
+            "conditionalVisibility": {
+              "parameterName": "UPN_Prefix",
+              "comparison": "isNotEqualTo"
+            },
+            "name": "Possible Unusual Behavior - Copy"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let baseUrl = \"https://security.microsoft.us\"; // Change to \"https://security.microsoft.us\" for government clouds\r\nDeviceLogonEvents\r\n| where TimeGenerated > ago(60d)\r\n| where AccountName == \"{UserPrincipalName}\"\r\n| summarize arg_max(TimeGenerated, *) by DeviceId\r\n| join (\r\n    DeviceInfo\r\n    | summarize arg_max(TimeGenerated, *) by DeviceId\r\n) on DeviceId\r\n| join kind=leftouter (\r\n    AlertEvidence\r\n    | where DeviceId != \"\"\r\n    | summarize AlertCount = dcount(AlertId) by DeviceId\r\n) on DeviceId\r\n| project\r\n    LastSeen = TimeGenerated,\r\n    DeviceName,\r\n    OSPlatform,\r\n    AlertCount = todouble(AlertCount),\r\n    MDE_Onboarding = OnboardingStatus,\r\n    MDE_Status = SensorHealthState,\r\n    ExposureLevel,\r\n    PublicIP,\r\n    DeviceProfileUrl = strcat(baseUrl, \"/machines/\", DeviceId),\r\n    DeviceId | order by LastSeen",
+              "size": 1,
+              "showAnalytics": true,
+              "title": "Related Device Activity (60 Days)",
+              "noDataMessage": "No devices detected for this user",
+              "showExportToExcel": true,
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "LastSeen",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DeviceName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "OSPlatform",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "AlertCount",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "MDE_Onboarding",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "MDE_Status",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "ExposureLevel",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "PublicIP",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DeviceProfileUrl",
+                    "formatter": 7,
+                    "formatOptions": {
+                      "linkTarget": "Url",
+                      "linkLabel": "Click for Device Details",
+                      "customColumnWidthSetting": "16ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DeviceId",
+                    "formatter": 5
+                  }
+                ],
+                "rowLimit": 10000
+              },
+              "sortBy": []
+            },
+            "conditionalVisibility": {
+              "parameterName": "UPN_Prefix",
+              "comparison": "isNotEqualTo"
+            },
+            "name": "Related Device Activity (60 Days)"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "AuditLogs\r\n| where OperationName contains \"requested (PIM activation)\"\r\n//| where Result == \"success\"\r\n| extend UPN = tostring(InitiatedBy.user.userPrincipalName)\r\n| extend Role0 = tostring(TargetResources[0].displayName)\r\n| extend Role1 = tostring(TargetResources[1].displayName)\r\n| extend Role3 = tostring(TargetResources[3].displayName)\r\n| mv-expand AD = AdditionalDetails\r\n| extend ADKey = tostring(AD.key), ADValue = tostring(AD.value)\r\n| summarize\r\n    CommentFromDetails = anyif(ADValue, ADKey =~ \"Justification\"),\r\n    Source_IP = anyif(ADValue, ADKey =~ \"ipaddr\")\r\n    by TimeGenerated, Identity, UPN, Category, Result, OperationName, ResultDescription, Role0, Role1, Role3\r\n| extend Comment = iff(Category == \"GroupManagement\", ResultDescription, CommentFromDetails)\r\n| extend Role = case(\r\n    Category == \"GroupManagement\" and isnotempty(Role1), Role1,\r\n    Role0 == \"Member\" and isnotempty(Role3), Role3,\r\n    isnotempty(Role1) and isempty(Role0), Role1,\r\n    Role0\r\n)\r\n| project TimeGenerated, Identity, UPN, Role, Category, Comment, Source_IP, Result\r\n| where UPN == \"{UserPrincipalName}\"",
+              "size": 1,
+              "title": "PIM Request History",
+              "noDataMessage": "No PIM activity detected for this user (Admin Activity)",
+              "timeContextFromParameter": "TimeGenerated",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "TimeGenerated",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DisplayName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "26ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserPrincipalName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "44ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Role",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  }
+                ],
+                "rowLimit": 10000
+              }
+            },
+            "conditionalVisibility": {
+              "parameterName": "UPN_Prefix",
+              "comparison": "isNotEqualTo"
+            },
+            "name": "PIM Request History"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "AzureActivity\r\n| where Caller == \"{UserPrincipalName}\"\r\n| where ActivityStatusValue == \"Success\"\r\n| extend Action = parse_json(Properties).message\r\n| extend Resource = parse_json(Properties).resource\r\n| project TimeGenerated, Caller, OperationNameValue, Action, ResourceGroup, SubscriptionId, CallerIpAddress, Resource, _ResourceId",
+              "size": 1,
+              "title": "Azure Admin Activity",
+              "noDataMessage": "No Azure changes detected for this user (Admin Activity)",
+              "timeContextFromParameter": "TimeGenerated",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "TimeGenerated",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Caller",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "40ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "OperationNameValue",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "38ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Action",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "34ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "ResourceGroup",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "30ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "SubscriptionId",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "42ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "CallerIpAddress",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Resource",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "30ch"
+                    }
+                  }
+                ],
+                "rowLimit": 10000
+              }
+            },
+            "conditionalVisibility": {
+              "parameterName": "UPN_Prefix",
+              "comparison": "isNotEqualTo"
+            },
+            "name": "Azure Admin Activity"
+          }
+        ]
+      },
+      "conditionalVisibility": {
+        "parameterName": "tab",
+        "comparison": "isEqualTo",
+        "value": "tab3"
+      },
+      "name": "Risky Users Group"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 9,
+            "content": {
+              "version": "KqlParameterItem/1.0",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "parameters": [
+                {
+                  "version": "KqlParameterItem/1.0",
+                  "name": "Roles",
+                  "label": "Roles & Groups",
+                  "type": 2,
+                  "isRequired": true,
+                  "multiSelect": true,
+                  "quote": "'",
+                  "delimiter": ",",
+                  "query": "AuditLogs\r\n| where TimeGenerated > ago(90d)\r\n| where OperationName contains \"requested (PIM activation)\"\r\n| where Result == \"success\"\r\n| extend UPN = tostring(InitiatedBy.user.userPrincipalName)\r\n| extend Role0 = tostring(TargetResources[0].displayName)\r\n| extend Role1 = tostring(TargetResources[1].displayName)\r\n| extend Role3 = tostring(TargetResources[3].displayName)\r\n| mv-expand AD = AdditionalDetails\r\n| extend ADKey = tostring(AD.key), ADValue = tostring(AD.value)\r\n| summarize\r\n    CommentFromDetails = anyif(ADValue, ADKey =~ \"Justification\"),\r\n    Source_IP = anyif(ADValue, ADKey =~ \"ipaddr\")\r\n    by TimeGenerated, Identity, UPN, Category, Result, OperationName, ResultDescription, Role0, Role1, Role3\r\n| extend Comment = iff(Category == \"GroupManagement\", ResultDescription, CommentFromDetails)\r\n| extend Role = case(\r\n    Category == \"GroupManagement\" and isnotempty(Role1), Role1,\r\n    Role0 == \"Member\" and isnotempty(Role3), Role3,\r\n    isnotempty(Role1) and isempty(Role0), Role1,\r\n    Role0\r\n)\r\n| project TimeGenerated, Identity, UPN, Role, Category, Comment, Source_IP, Result\r\n| summarize by Role | sort by Role asc",
+                  "crossComponentResources": [
+                    "{Workspace}"
+                  ],
+                  "typeSettings": {
+                    "additionalResourceOptions": [
+                      "value::all"
+                    ],
+                    "showDefault": false
+                  },
+                  "queryType": 0,
+                  "resourceType": "microsoft.operationalinsights/workspaces",
+                  "value": [
+                    "value::all"
+                  ],
+                  "id": "aa9fbaf9-2199-4bae-886a-e98bb71ff250"
+                },
+                {
+                  "version": "KqlParameterItem/1.0",
+                  "name": "Category",
+                  "type": 2,
+                  "isRequired": true,
+                  "multiSelect": true,
+                  "quote": "'",
+                  "delimiter": ",",
+                  "query": "AuditLogs\r\n| where TimeGenerated > ago(7d)\r\n| where OperationName contains \"requested (PIM activation)\"\r\n| where Result == \"success\"\r\n| summarize by Category",
+                  "crossComponentResources": [
+                    "{Workspace}"
+                  ],
+                  "typeSettings": {
+                    "additionalResourceOptions": [
+                      "value::all"
+                    ],
+                    "showDefault": false
+                  },
+                  "timeContext": {
+                    "durationMs": 0
+                  },
+                  "timeContextFromParameter": "TimeGenerated",
+                  "queryType": 0,
+                  "resourceType": "microsoft.operationalinsights/workspaces",
+                  "value": [
+                    "value::all"
+                  ],
+                  "id": "13732d80-c5b0-4c98-b801-21299d32c0b0"
+                }
+              ],
+              "style": "above",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces"
+            },
+            "name": "parameters - 3"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "AuditLogs\r\n| where TimeGenerated > ago(90d)\r\n| where OperationName contains \"requested (PIM activation)\"\r\n| extend Result = \"Activated\"\r\n| extend UPN = tostring(InitiatedBy.user.userPrincipalName)\r\n| extend Role0 = tostring(TargetResources[0].displayName)\r\n| extend Role1 = tostring(TargetResources[1].displayName)\r\n| extend Role3 = tostring(TargetResources[3].displayName)\r\n| mv-expand AD = AdditionalDetails\r\n| extend ADKey = tostring(AD.key), ADValue = tostring(AD.value)\r\n| summarize\r\n    CommentFromDetails = anyif(ADValue, ADKey =~ \"Justification\"),\r\n    Source_IP = anyif(ADValue, ADKey =~ \"ipaddr\")\r\n    by TimeGenerated, Identity, UPN, Category, Result, OperationName, ResultDescription, Role0, Role1, Role3\r\n| extend Comment = iff(Category == \"GroupManagement\", ResultDescription, CommentFromDetails)\r\n| extend Role = case(\r\n    Category == \"GroupManagement\" and isnotempty(Role1), Role1,\r\n    Role0 == \"Member\" and isnotempty(Role3), Role3,\r\n    isnotempty(Role1) and isempty(Role0), Role1,\r\n    Role0\r\n)\r\n| project TimeGenerated, Identity, UPN, Role, Category, Comment, Source_IP, Result\r\n| where Role in ({Roles})\r\n| where Category in ({Category})\r\n| summarize count() by bin(TimeGenerated, 1h), Result",
+              "size": 1,
+              "title": "PIM Activity TImeline (90 Days)",
+              "showExportToExcel": true,
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "visualization": "timechart",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "TimeGenerated",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Identity",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UPN",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Role",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "22ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Category",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Comment",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "26ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Source_IP",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Result",
+                    "formatter": 5
+                  }
+                ],
+                "rowLimit": 10000,
+                "filter": true
+              }
+            },
+            "name": "PIM Activity TImeline (90 Days)"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "AuditLogs\r\n| where OperationName contains \"requested (PIM activation)\"\r\n| where Result == \"success\"\r\n| extend UPN = tostring(InitiatedBy.user.userPrincipalName)\r\n| extend Role0 = tostring(TargetResources[0].displayName)\r\n| extend Role1 = tostring(TargetResources[1].displayName)\r\n| extend Role3 = tostring(TargetResources[3].displayName)\r\n| mv-expand AD = AdditionalDetails\r\n| extend ADKey = tostring(AD.key), ADValue = tostring(AD.value)\r\n| summarize\r\n    CommentFromDetails = anyif(ADValue, ADKey =~ \"Justification\"),\r\n    Source_IP = anyif(ADValue, ADKey =~ \"ipaddr\")\r\n    by TimeGenerated, Identity, UPN, Category, Result, OperationName, ResultDescription, Role0, Role1, Role3\r\n| extend Comment = iff(Category == \"GroupManagement\", ResultDescription, CommentFromDetails)\r\n| extend Role = case(\r\n    Category == \"GroupManagement\" and isnotempty(Role1), Role1,\r\n    Role0 == \"Member\" and isnotempty(Role3), Role3,\r\n    isnotempty(Role1) and isempty(Role0), Role1,\r\n    Role0\r\n)\r\n| extend Role = tostring(Role)\r\n| where Role in ({Roles})\r\n| where Category in ({Category})\r\n| project TimeGenerated, Identity, UPN, Role, Category, Comment, Source_IP, Result",
+              "size": 0,
+              "title": "Successful PIM Request Activity",
+              "timeContextFromParameter": "TimeGenerated",
+              "showExportToExcel": true,
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "TimeGenerated",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Identity",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UPN",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Role",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "22ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Category",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Comment",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "26ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Source_IP",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Result",
+                    "formatter": 5
+                  }
+                ],
+                "rowLimit": 10000,
+                "filter": true
+              }
+            },
+            "name": "PIM Activity"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "AuditLogs\r\n| where TimeGenerated > ago(60d)\r\n| where OperationName contains \"requested (PIM activation)\"\r\n| where Result == \"success\"\r\n| extend UPN = tostring(InitiatedBy.user.userPrincipalName)\r\n| extend Role0 = tostring(TargetResources[0].displayName)\r\n| extend Role1 = tostring(TargetResources[1].displayName)\r\n| extend Role3 = tostring(TargetResources[3].displayName)\r\n| mv-expand AD = AdditionalDetails\r\n| extend ADKey = tostring(AD.key), ADValue = tostring(AD.value)\r\n| summarize\r\n    CommentFromDetails = anyif(ADValue, ADKey =~ \"Justification\"),\r\n    Source_IP = anyif(ADValue, ADKey =~ \"ipaddr\")\r\n    by TimeGenerated, Identity, UPN, Category, Result, OperationName, ResultDescription, Role0, Role1, Role3\r\n| extend Comment = iff(Category == \"GroupManagement\", ResultDescription, CommentFromDetails)\r\n| extend Role = case(\r\n    Category == \"GroupManagement\" and isnotempty(Role1), Role1,\r\n    Role0 == \"Member\" and isnotempty(Role3), Role3,\r\n    isnotempty(Role1) and isempty(Role0), Role1,\r\n    Role0\r\n)\r\n| project TimeGenerated, Identity, UPN, Role, Category, Comment, Source_IP, Result\r\n| summarize count() by Identity, Role, Comment\r\n| where Role in ({Roles})",
+              "size": 0,
+              "title": "PIM Activity - Count by Role & Comment (60 Days)",
+              "showExportToExcel": true,
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "Identity",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Role",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Comment",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "count_",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "TimeGenerated",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20"
+                    }
+                  },
+                  {
+                    "columnMatch": "UPN",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25"
+                    }
+                  },
+                  {
+                    "columnMatch": "Category",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Source_IP",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Result",
+                    "formatter": 5
+                  }
+                ],
+                "rowLimit": 10000,
+                "filter": true
+              }
+            },
+            "name": "PIM Activity - Count by Role & Comment (60 Days)"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let PIMBase =\r\n    AuditLogs\r\n    | where TimeGenerated > ago(720d)\r\n    | where OperationName contains \"requested (PIM activation)\"\r\n    | where Result == \"success\"\r\n    | extend UPN = tostring(InitiatedBy.user.userPrincipalName)\r\n    | extend Role0 = tostring(TargetResources[0].displayName)\r\n    | extend Role1 = tostring(TargetResources[1].displayName)\r\n    | extend Role3 = tostring(TargetResources[3].displayName)\r\n    | mv-expand AD = AdditionalDetails\r\n    | extend ADKey = tostring(AD.key), ADValue = tostring(AD.value)\r\n    | summarize\r\n        CommentFromDetails = anyif(ADValue, ADKey =~ \"Justification\"),\r\n        Source_IP = anyif(ADValue, ADKey =~ \"ipaddr\")\r\n        by TimeGenerated, Identity, UPN, Category, Result, OperationName, ResultDescription, Role0, Role1, Role3\r\n    | extend Comment = iff(Category == \"GroupManagement\", ResultDescription, CommentFromDetails)\r\n    | extend Role = case(\r\n        Category == \"GroupManagement\" and isnotempty(Role1), Role1,\r\n        Role0 == \"Member\" and isnotempty(Role3), Role3,\r\n        isnotempty(Role1) and isempty(Role0), Role1,\r\n        Role0\r\n    )\r\n    | where isnotempty(UPN)\r\n    | project TimeGenerated, Identity, UPN, Role, Category, Comment, Source_IP, Result;\r\nlet PIMHistory90d =\r\n    PIMBase\r\n    | where TimeGenerated between (ago(90d) .. ago(24h))\r\n    | summarize\r\n        HistoricalRequestCount = count(),\r\n        HistoricalRequests = make_list(\r\n            bag_pack(\r\n                \"TimeGenerated\", TimeGenerated,\r\n                \"Identity\", Identity,\r\n                \"UPN\", UPN,\r\n                \"Role\", Role,\r\n                \"Category\", Category,\r\n                \"Comment\", Comment,\r\n                \"Source_IP\", Source_IP,\r\n                \"Result\", Result\r\n            ),\r\n            1000\r\n        )\r\n    // Group by both Identity and UPN\r\n    by Identity, UPN;\r\nlet RecentPIM24h =\r\n    PIMBase\r\n    | where TimeGenerated >= ago(24h)\r\n    | summarize\r\n        RecentRequestCount = count(),\r\n        MostRecentRequest = max(TimeGenerated),\r\n        RecentRequests = make_list(\r\n            bag_pack(\r\n                \"TimeGenerated\", TimeGenerated,\r\n                \"Identity\", Identity,\r\n                \"UPN\", UPN,\r\n                \"Role\", Role,\r\n                \"Category\", Category,\r\n                \"Comment\", Comment,\r\n                \"Source_IP\", Source_IP,\r\n                \"Result\", Result\r\n            ),\r\n            100\r\n        )\r\n    // Group by both Identity and UPN\r\n    by Identity, UPN;\r\nRecentPIM24h\r\n// Join on UPN, as Identity should be consistent per UPN\r\n| join kind=leftouter PIMHistory90d on UPN\r\n| project\r\n    Identity, // Added Identity to the final output\r\n    UPN,\r\n    MostRecentRequest,\r\n    RecentCount=RecentRequestCount,\r\n    RecentRequests,\r\n    HistoricalCount = coalesce(HistoricalRequestCount, 0),\r\n    HistoricalRequests\r\n| order by  HistoricalCount desc\r\n",
+              "size": 0,
+              "title": "PIM Activity - Historic Activity Review",
+              "showExportToExcel": true,
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "Identity",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UPN",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "MostRecentRequest",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "22ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "RecentCount",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "17ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "RecentRequests",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "HistoricalCount",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "17ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "HistoricalRequests",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  }
+                ],
+                "rowLimit": 10000,
+                "filter": true
+              }
+            },
+            "name": "PIM Activity - Historic Activity Review"
+          }
+        ]
+      },
+      "conditionalVisibility": {
+        "parameterName": "tab",
+        "comparison": "isEqualTo",
+        "value": "tab4"
+      },
+      "name": "PIM Activity Review"
+    }
+  ],
+  "fallbackResourceIds": [
+    "Azure Security Center"
+  ],
+  "fromTemplateId": "sentinel-UserWorkbook",
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}
