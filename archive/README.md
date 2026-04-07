@@ -1,102 +1,124 @@
-# Archive: Entra Admin and Risky User Review Workbook
+# Archive: Azure VM – MDE Onboarding Status Workbook
 
-> **This is an archived version.** The workbook has been significantly revised and is actively maintained at [AndrewBlumhardt/EntraAdminReviewWorkbook](https://github.com/AndrewBlumhardt/EntraAdminReviewWorkbook). Use that version for new deployments.
+> **This is a prior version.** The workbook has been significantly revised with major updates and a secondary search method. The current version is maintained at [AzureVmMdeOmboardingStatus.json](../AzureVmMdeOmboardingStatus.json) in the root of this repository. Use that version for new deployments.
 
 ---
 
-This workbook supports structured analyst review of administrative and risky users in Microsoft Entra ID. It correlates Entra sign-ins, Sentinel incidents and alerts, UEBA, MDE device context, PIM activation history, and Azure administrative activity in one place.
+## Overview
 
-## Why Admin Account Hunting Matters
+**Azure VM – MDE Onboarding Status** is an Azure Monitor Workbook that helps verify **Microsoft Defender for Endpoint (MDE)** onboarding across **Azure virtual machines** and **Azure Arc–enabled servers**.
 
-The hardest attacker to stop is a legitimate admin using their own assigned credentials. Whether disgruntled, coerced, compensated, or placed deliberately, an admin acting within their authorized scope generates activity that looks normal because it is technically normal. Standard detection tools are not built to distinguish an admin doing their job from one doing harm.
+The workbook correlates Azure activity data with MDE device records to identify which machines are actively reporting and whether they are properly protected. It is designed to surface onboarding gaps that are difficult to detect through extension health or portal views alone.
 
-The signal is in the deviation. This workbook does not look for malware or known-bad indicators. It looks for:
+This workbook is intended for security engineers, cloud administrators, and SOC teams responsible for Defender for Servers and MDE compliance.
 
-- **Unusual sign-in patterns** before successful authentication: failed attempts, atypical locations, unfamiliar devices, or sequences that do not match the account's history
-- **PIM activation anomalies**: role activations at unusual times, thin or missing justifications, or frequency that does not match prior behavior
-- **Admin change patterns**: bursts of privileged changes or modifications outside normal operational windows
-- **Behavioral drift**: UEBA signals, risky user flags, and device context suggesting an account is operating differently than it has historically
+## Screenshot
 
-Individually these signals may be low confidence. Correlated against a single identity, they support a targeted analyst review.
+<p align="center"><img src="https://github.com/AndrewBlumhardt/workbooks/blob/main/images/MDE_Workbook.png" width="75%"/></p>
 
-Many organizations separate daily-use identities from privileged admin accounts, which creates an investigation gap: admin accounts often lack owner context and profile metadata, and analysts need fast pivots from identity to behavior, incidents, devices, and PIM history. This workbook closes that gap.
+---
 
-## Critical Dependency: Search Term Pattern
+## How It Works
 
-The **Search Term** parameter is the key dependency for this workbook.
+Azure resource data and MDE device data cannot be queried together directly. To work around this, the workbook uses a two-stage correlation approach.
 
-- Default value: `.admin@`
-- Purpose: identify likely admin identities in UPN patterns
-- Example alternatives: `adm@`, `-admin@`, `_admin@`, or a dedicated admin domain marker
+### Active VMs with MDE Status
 
-If your environment does not have a clear and consistent admin naming pattern, matching and correlation quality drops significantly.
+- Shows Azure VMs with recorded Azure activity in the last 30 days
+- Cross-references those systems against MDE device records
+- Highlights:
+  - MDE onboarding status
+  - Microsoft Defender Antivirus status
+- Supports filtering by status
+- Selecting one or more rows filters the lower table automatically
 
-Use this view to validate and tune the Search Term first:
+This view is optimized for identifying **actively running workloads that are not protected by MDE**.
 
-<p align="center"><img src="https://raw.githubusercontent.com/AndrewBlumhardt/EntraAdminReviewWorkbook/main/images/searchTerm.png" width="75%"/></p>
+### All Tenant VMs
 
-## Major Revision Coverage
+- Displays all Azure VMs and Arc-enabled servers visible to the current user
+- Includes inactive or rarely used systems
+- Automatically filtered based on selections from the top table
 
-### 1. Main Admin Review Experience
+This view supports **full inventory validation** and detailed investigation.
 
-The main view lists likely admin accounts and enables deeper investigation pivots, including sign-in activity, related incidents and alerts, device context, PIM history, and Azure activity.
+---
 
-<p align="center"><img src="https://raw.githubusercontent.com/AndrewBlumhardt/EntraAdminReviewWorkbook/main/images/mainView.png" width="75%"/></p>
+## Common Issues the Workbook Helps Identify
 
-### 2. Risky User Review (Details)
+The workbook is designed to expose conditions related to common MDE onboarding failures, including:
 
-The risky-user path applies the same investigation flow to users flagged by identity risk signals. This is useful for quickly determining whether risky accounts also show privileged or suspicious operational behavior.
+- Defender for Servers not enabled on the subscription
+- Missing or broken Azure VM Guest Agent
+- Failed or repeatedly failing MDE extensions
+- Conflicts between direct onboarding methods and Defender for Cloud
+- Local OS or network conditions preventing sensor activation
 
-<p align="center"><img src="https://raw.githubusercontent.com/AndrewBlumhardt/EntraAdminReviewWorkbook/main/images/detailsView.png" width="75%"/></p>
+Guidance for interpreting these scenarios is included in the workbook's help panel.
 
-### 3. PIM Activity Review
+---
 
-The PIM section provides broad role activation visibility and trend analysis, including role/category filters and activation patterns.
+## Prerequisites
 
-<p align="center"><img src="https://raw.githubusercontent.com/AndrewBlumhardt/EntraAdminReviewWorkbook/main/images/pimReview.png" width="75%"/></p>
+- Access to **Log Analytics** where Defender data is stored
+- Permissions to query:
+  - Azure Resource Graph
+  - Log Analytics workspaces
+- Microsoft Defender for Endpoint enabled in the tenant
+- Defender for Servers Plan 1 or Plan 2 for full compliance validation
 
-### 4. PIM Activity Details
+---
 
-The detail view highlights activation-level evidence, including role, category, source IP, and justification comments for deeper governance and compliance review.
+## Importing the Workbook
 
-<p align="center"><img src="https://raw.githubusercontent.com/AndrewBlumhardt/EntraAdminReviewWorkbook/main/images/pimDetails.png" width="75%"/></p>
+### Import via Azure Portal
 
-## Data Sources Required
+1. Open the **Azure Portal**
+2. Navigate to **Azure Monitor → Workbooks**
+3. Select **+ New**
+4. Open **Advanced Editor**
+5. Paste the contents of `AzureVmMdeOmboardingStatus.json`
+6. Select **Apply**
+7. Save the workbook:
+   - Choose a resource group
+   - Assign a name
+   - Optionally share at subscription or resource group scope
 
-For full functionality, your workspace should include:
+### Import from JSON File
 
-- `SigninLogs`
-- `AuditLogs`
-- `IdentityInfo` (if available from MDI/M365 Defender integration)
-- `BehaviorAnalytics`
-- `SecurityIncident`
-- `SecurityAlert`
-- `DeviceLogonEvents`
-- `DeviceInfo`
-- `AzureActivity`
+1. Download `AzureVmMdeOmboardingStatus.json` from this folder
+2. Open **Azure Monitor → Workbooks**
+3. Select **+ New**
+4. Choose **Template Gallery → Import**
+5. Upload the JSON file
+6. Save the workbook
 
-If one or more sources are missing, sections can appear empty.
+---
 
-## Import
+## Permissions and Data Visibility
 
-1. Open Microsoft Sentinel or Azure Monitor.
-2. Go to **Workbooks**.
-3. Create a new workbook and open **Advanced Editor**.
-4. Switch to **JSON** mode.
-5. Paste contents of `AzureAdminReviewWorkbook.json`.
-6. Save the workbook.
+- Results are limited to resources visible to the signed-in user
+- Cross-subscription visibility depends on RBAC assignments
+- Activity-based results depend on recent Azure control-plane activity
 
-## Analyst Notes
+---
 
-- Start by tuning **Search Term** until admin candidate detection matches your naming standard.
-- Validate correlated user matches before operational action.
-- Use PIM comment and source IP context to identify weak or unusual activation behavior.
-- Empty widgets usually indicate missing data source coverage, not necessarily workbook errors.
+## Intended Use Cases
+
+- Validate Defender for Servers onboarding at scale
+- Identify active VMs missing MDE protection
+- Troubleshoot onboarding failures without VM-by-VM inspection
+- Support audit and compliance efforts
+- Reduce reliance on extension health alone as a signal
+
+---
 
 ## Files
 
-- `AzureAdminReviewWorkbook.json`
+- `AzureVmMdeOmboardingStatus.json`
 
-## License
+---
 
-Provided as-is. Validate queries and assumptions in your environment before production use.
+## Disclaimer
+
+This workbook is provided as-is for operational visibility and troubleshooting. Always validate findings against official Azure and Defender portal views before making remediation or compliance decisions.
