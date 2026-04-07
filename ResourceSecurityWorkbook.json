@@ -1,0 +1,1457 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "# Azure VM & Arc Resource - Security Health"
+      },
+      "name": "text - 5"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "crossComponentResources": [
+          "value::tenant"
+        ],
+        "parameters": [
+          {
+            "id": "90eacada-8683-4225-9395-7e6ec8068458",
+            "version": "KqlParameterItem/1.0",
+            "name": "Workspce",
+            "label": "Sentinel Workspace",
+            "type": 5,
+            "description": "Select your primary Sentinel workspace",
+            "isRequired": true,
+            "query": "resources\r\n| where type =~ 'microsoft.operationalinsights/workspaces'\r\n| order by name asc\r\n| summarize Selected = makelist(id, 10), All = makelist(id, 1000)\r\n| mvexpand All limit 1000\r\n| project value = tostring(All), label = tostring(All), selected = iff(Selected contains All, true, false)\r\n| where value !contains \"DefaultW\"",
+            "crossComponentResources": [
+              "value::tenant"
+            ],
+            "typeSettings": {
+              "resourceTypeFilter": {
+                "microsoft.operationalinsights/workspaces": true
+              },
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resources/tenants",
+            "value": ""
+          },
+          {
+            "id": "57e5f025-e81c-4868-9c82-78c81794fd3d",
+            "version": "KqlParameterItem/1.0",
+            "name": "TImeRange",
+            "label": "Time Range",
+            "type": 4,
+            "description": "Recommend 14-30 days for Activity and MDE status",
+            "isRequired": true,
+            "isGlobal": true,
+            "typeSettings": {
+              "selectableValues": [
+                {
+                  "durationMs": 43200000
+                },
+                {
+                  "durationMs": 86400000
+                },
+                {
+                  "durationMs": 172800000
+                },
+                {
+                  "durationMs": 259200000
+                },
+                {
+                  "durationMs": 604800000
+                },
+                {
+                  "durationMs": 1209600000
+                },
+                {
+                  "durationMs": 2419200000
+                },
+                {
+                  "durationMs": 2592000000
+                },
+                {
+                  "durationMs": 5184000000
+                },
+                {
+                  "durationMs": 7776000000
+                }
+              ]
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "value": {
+              "durationMs": 1209600000
+            }
+          },
+          {
+            "id": "2964b3e7-fd6a-4a9a-ac84-910cb68ccb67",
+            "version": "KqlParameterItem/1.0",
+            "name": "Subscriptions",
+            "type": 6,
+            "isRequired": true,
+            "isGlobal": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "typeSettings": {
+              "resourceTypeFilter": {
+                "microsoft.operationalinsights/workspaces": true
+              },
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "includeAll": false,
+              "showDefault": false
+            },
+            "value": [
+              "value::all"
+            ]
+          },
+          {
+            "id": "6615f543-1a1e-4c05-819f-d5dfeea3cead",
+            "version": "KqlParameterItem/1.0",
+            "name": "OS",
+            "label": "Operating Systems",
+            "type": 2,
+            "isRequired": true,
+            "isGlobal": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "AzureActivity\r\n| where TimeGenerated > ago(30d)\r\n| extend ResourceProviderValue = tolower(ResourceProviderValue)\r\n| where ResourceProviderValue == \"microsoft.compute\" or ResourceProviderValue == \"microsoft.hybridcompute\"\r\n| where _ResourceId contains \"machines/\"\r\n    and _ResourceId !contains \"extensions/\"\r\n    //and _ResourceId !contains \"virtualmachinescaleset\"\r\n| summarize arg_max(TimeGenerated, *) by _ResourceId\r\n| extend Parts = split(_ResourceId, \"/\")\r\n| extend _ResourceId = tolower(tostring(strcat_array(array_slice(Parts, 0, 8), \"/\")))\r\n| project AzureResourceId = _ResourceId\r\n| join kind=leftouter (\r\n    DeviceInfo\r\n    | where TimeGenerated > ago(14d)\r\n    | where isnotempty(AzureResourceId)\r\n    | summarize arg_max(TimeGenerated, *) by AzureResourceId\r\n    | project\r\n        TimeGenerated,\r\n        DeviceName,\r\n        DeviceId,\r\n        IsAzureADJoined,\r\n        MachineGroup,\r\n        OSPlatform,\r\n        OnboardingStatus,\r\n        SensorHealthState,\r\n        AzureResourceId = tolower(tostring(AzureResourceId))\r\n    )\r\n    on AzureResourceId\r\n| extend OSPlatform = iif(isempty(OSPlatform), \"----\", OSPlatform)\r\n| summarize by OSPlatform | order by OSPlatform asc\r\n",
+            "crossComponentResources": [
+              "{Workspce}"
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 0
+            },
+            "timeContextFromParameter": "TImeRange",
+            "queryType": 0,
+            "resourceType": "microsoft.operationalinsights/workspaces",
+            "value": [
+              "value::all"
+            ]
+          },
+          {
+            "id": "5633f75b-d9c2-430f-a47a-377976ce71b9",
+            "version": "KqlParameterItem/1.0",
+            "name": "Group",
+            "label": "MDE Device Groups",
+            "type": 2,
+            "isRequired": true,
+            "isGlobal": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "DeviceInfo\r\n| where TimeGenerated > ago(7d)\r\n| where isnotempty(AzureResourceId)\r\n| summarize by MachineGroup\r\n| extend MachineGroup = iif(isempty(MachineGroup), \"(Blank)\", MachineGroup)\r\n| order by MachineGroup asc",
+            "crossComponentResources": [
+              "{Workspce}"
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "showDefault": false
+            },
+            "queryType": 0,
+            "resourceType": "microsoft.operationalinsights/workspaces",
+            "value": [
+              "value::all"
+            ]
+          },
+          {
+            "id": "0ef9ed1f-af0a-4e55-8710-8de9d07ba0f1",
+            "version": "KqlParameterItem/1.0",
+            "name": "ShowHelp",
+            "label": "Show Help",
+            "type": 2,
+            "isRequired": true,
+            "isGlobal": true,
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "jsonData": "[\r\n  {\r\n    \"value\": \"Yes\",\r\n    \"label\": \"Yes\"\r\n  },\r\n  {\r\n    \"value\": \"No\",\r\n    \"label\": \"No\"\r\n  }\r\n]",
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "value": "No"
+          },
+          {
+            "id": "bbbb5017-00e5-4ebe-a195-3f2304ffe133",
+            "version": "KqlParameterItem/1.0",
+            "name": "SlimView",
+            "label": "Slim View",
+            "type": 2,
+            "isRequired": true,
+            "isGlobal": true,
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "jsonData": "[\r\n  {\r\n    \"value\": \"Yes\",\r\n    \"label\": \"Yes\"\r\n  },\r\n  {\r\n    \"value\": \"No\",\r\n    \"label\": \"No\"\r\n  }\r\n]",
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "value": "No"
+          },
+          {
+            "id": "ef24a704-8143-47e4-9ea2-47d35c5cb9d1",
+            "version": "KqlParameterItem/1.0",
+            "name": "HideInputs",
+            "type": 2,
+            "isRequired": true,
+            "isGlobal": true,
+            "isHiddenWhenLocked": true,
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "jsonData": "[\r\n  {\r\n    \"value\": \"Yes\",\r\n    \"label\": \"Yes\"\r\n  },\r\n  {\r\n    \"value\": \"No\",\r\n    \"label\": \"No\"\r\n  }\r\n]",
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "value": "Yes"
+          }
+        ],
+        "style": "above",
+        "queryType": 1,
+        "resourceType": "microsoft.resources/tenants"
+      },
+      "name": "parameters - 4"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "2e212dd4-1f38-49b9-a02d-ebe5bfc297bc",
+            "version": "KqlParameterItem/1.0",
+            "name": "Problem",
+            "label": "Azure Management",
+            "type": 2,
+            "description": "Filter for issues with Azure management or MDE onboard extension",
+            "isRequired": true,
+            "isGlobal": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "{\"version\":\"1.0.0\",\"content\":\"[\\r\\n  {\\r\\n    \\\"value\\\": \\\"VM Agent Missing\\\",\\r\\n    \\\"label\\\": \\\"VM Agent Missing\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"MDE Extension Failed\\\",\\r\\n    \\\"label\\\": \\\"MDE Extension Failed\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Good\\\",\\r\\n    \\\"label\\\": \\\"Good\\\"\\r\\n  }\\r\\n]\",\"transformers\":null}",
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 8,
+            "value": [
+              "value::all"
+            ]
+          },
+          {
+            "id": "f2639bef-fdd0-45d2-a735-1a7d1f6509ec",
+            "version": "KqlParameterItem/1.0",
+            "name": "Workload",
+            "type": 2,
+            "isRequired": true,
+            "isGlobal": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "showDefault": false
+            },
+            "jsonData": "[\r\n  {\r\n    \"value\": \"Virtual Machine\",\r\n    \"label\": \"Virtual Machine\"\r\n  },\r\n  {\r\n    \"value\": \"Azure Arc\",\r\n    \"label\": \"Azure Arc\"\r\n  }\r\n]",
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "value": [
+              "value::all"
+            ]
+          },
+          {
+            "id": "b83601c8-dd62-48ea-a411-2864fa8c0161",
+            "version": "KqlParameterItem/1.0",
+            "name": "Power",
+            "label": "Power State",
+            "type": 2,
+            "isRequired": true,
+            "isGlobal": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "{\"version\":\"1.0.0\",\"content\":\"[\\r\\n  {\\r\\n    \\\"value\\\": \\\"Deallocated\\\",\\r\\n    \\\"label\\\": \\\"Deallocated\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Stopped\\\",\\r\\n    \\\"label\\\": \\\"Stopped\\\"\\r\\n  },\\r\\n\\t  {\\r\\n    \\\"value\\\": \\\"Starting\\\",\\r\\n    \\\"label\\\": \\\"Starting\\\"\\r\\n  },\\r\\n\\t  {\\r\\n    \\\"value\\\": \\\"Running\\\",\\r\\n    \\\"label\\\": \\\"Running\\\"\\r\\n  }\\r\\n]\",\"transformers\":null}",
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 8,
+            "value": [
+              "value::all"
+            ]
+          },
+          {
+            "id": "9ae9e73e-e5f7-4b47-904a-01dc31a009de",
+            "version": "KqlParameterItem/1.0",
+            "name": "VMAgent",
+            "type": 2,
+            "isRequired": true,
+            "isGlobal": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "{\"version\":\"1.0.0\",\"content\":\"[\\r\\n  {\\r\\n    \\\"value\\\": \\\"Enabled\\\",\\r\\n    \\\"label\\\": \\\"Enabled\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Unknown\\\",\\r\\n    \\\"label\\\": \\\"Unknown\\\"\\r\\n  }\\r\\n]\",\"transformers\":null}",
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 8,
+            "value": [
+              "value::all"
+            ]
+          },
+          {
+            "id": "655c8371-d835-4972-b897-39d478e1182b",
+            "version": "KqlParameterItem/1.0",
+            "name": "Extension",
+            "label": "MDE Extension",
+            "type": 2,
+            "isRequired": true,
+            "isGlobal": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "{\"version\":\"1.0.0\",\"content\":\"[\\r\\n  {\\r\\n    \\\"value\\\": \\\"Succeeded\\\",\\r\\n    \\\"label\\\": \\\"Succeeded\\\"\\r\\n  },\\r\\n  {\\r\\n    \\\"value\\\": \\\"Unknown\\\",\\r\\n    \\\"label\\\": \\\"Unknown\\\"\\r\\n  }\\r\\n]\",\"transformers\":null}",
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 8,
+            "value": [
+              "value::all"
+            ]
+          },
+          {
+            "id": "c2cedee6-9e24-40a5-adbf-6c628b834462",
+            "version": "KqlParameterItem/1.0",
+            "name": "Onboarding",
+            "label": "MDE Onboarding",
+            "type": 2,
+            "isRequired": true,
+            "isGlobal": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "showDefault": false
+            },
+            "jsonData": "[\r\n  {\r\n    \"value\": \"Onboarded\",\r\n    \"label\": \"Onboarded\"\r\n  },\r\n  {\r\n    \"value\": \"Insufficient info\",\r\n    \"label\": \"Insufficient Info\"\r\n  }\r\n]",
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "value": [
+              "value::all"
+            ]
+          },
+          {
+            "id": "50da484f-e007-4377-b1e0-4e098bdcb162",
+            "version": "KqlParameterItem/1.0",
+            "name": "Status",
+            "label": "MDE Status",
+            "type": 2,
+            "isRequired": true,
+            "isGlobal": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "showDefault": false
+            },
+            "jsonData": "[\r\n  {\r\n    \"value\": \"Active\",\r\n    \"label\": \"Active\"\r\n  },\r\n  {\r\n    \"value\": \"Inactive\",\r\n    \"label\": \"Inactive\"\r\n  },\r\n  {\r\n    \"value\": \"Unknown\",\r\n    \"label\": \"Unknown\"\r\n  },\r\n  {\r\n    \"value\": \"Impaired communications\",\r\n    \"label\": \"Impaired\"\r\n  }\r\n]",
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "value": [
+              "value::all"
+            ]
+          }
+        ],
+        "style": "above",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "conditionalVisibility": {
+        "parameterName": "SlimView",
+        "comparison": "isEqualTo",
+        "value": "No"
+      },
+      "name": "parameters2"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "# Azure Compute Security & Activity Workbook\r\n\r\n## About This Workbook\r\n\r\nThis workbook provides a unified security view of your Azure compute resources (VMs, VMSS, and Arc-enabled servers) by correlating data from Azure Resource Manager (ARM), Microsoft Defender for Endpoint (MDE), and Azure Activity Logs. It is designed to identify configuration gaps, security risks, and operational health issues that are not visible from a single data source.\r\n\r\n## Why This Workbook is Important\r\n\r\nThis workbook helps you solve key visibility challenges:\r\n\r\n*   **Identify Security Gaps:** Quickly find active compute resources that are not monitored by MDE.\r\n*   **Find Orphaned Resources:** Surface abandoned VMs in any power state to reduce risk and cost by highlighting a lack of recent management activity.\r\n*   **Resolve Onboarding Discrepancies:** Differentiate between automated MDE deployments via Azure extensions and direct onboarding methods to understand the true management state of a device.\r\n\r\n## How the Workbook Works\r\n\r\nThe workbook merges data from three sources to build its analysis:\r\n\r\n| Data Source | Data Provided |\r\n| :--- | :--- |\r\n| **Azure Resource Graph (ARM)** | The complete inventory and configuration for all Azure compute resources, including power status, OS details, and assigned extensions. |\r\n| **Azure Activity Logs** | A record of management activities, used to determine if a system is \"active\" and identify the last known human interaction. |\r\n| **Microsoft Defender for Endpoint (MDE)** | Real-world security posture from the endpoint itself, including antivirus status and sensor health. |\r\n\r\n## Important Notes & Caveats\r\n\r\n*   **Azure Virtual Desktop (AVD):** AVD instances may not generate regular Azure Activity Logs even when active, as user activity occurs within the OS, not at the Azure management layer.\r\n*   **Permissions:** You need read access to the relevant Azure Subscriptions (for ARM/Activity Logs) and the Log Analytics Workspace containing the `DeviceInfo` table (for MDE).\r\n\r\n---\r\n\r\n# Troubleshooting Common Findings\r\n\r\nThe workbook is designed to surface discrepancies that point to specific problems. The sections below describe the most critical findings and their resolution steps.\r\n\r\n## 1. Finding: Missing or Unresponsive Azure VM Agent\r\n\r\nThis is the most critical underlying issue. The Azure VM Guest Agent is essential for Azure to manage the VM and deploy extensions. If it's missing or unhealthy, automated security deployments like MDE will fail.\r\n\r\n**How to Identify in the Workbook:**\r\n*   **VM Agent Health:** `Unknown` or `Not Ready`\r\n*   **Power Status:** `Running`\r\n\r\n**Resolution:**\r\nThe agent must be reinstalled on the VM. Log into the affected machine and follow the official Microsoft documentation to reinstall the `WindowsAzureVmAgent` (Windows) or `walinuxagent` (Linux).\r\n\r\n## 2. Finding: VM is Active but Missing from MDE\r\n\r\nThis is a critical security gap where a running server has no security monitoring from Defender for Endpoint.\r\n\r\n**How to Identify in the Workbook:**\r\n*   **Power Status:** `Running`\r\n*   **MDE Status:** `Not Onboarded` or `(blank)`\r\n\r\n**Resolution:**\r\n*   **Check VM Agent:** First, confirm this is not a symptom of a **Missing VM Agent** (see Finding #1).\r\n*   **Enable Defender for Servers:** Ensure the subscription has Defender for Servers Plan 1 or 2 enabled for automated onboarding.\r\n*   **Re-deploy Extension:** In the Azure portal, go to the VM's `Extensions + applications` blade. Find and **uninstall** the MDE extension (`MDE.Windows` or `MDE.Linux`), then wait for Defender for Cloud to automatically attempt redeployment.\r\n*   **Troubleshoot on OS:** If the extension fails again, a local issue is the likely cause. Run the MDE Client Analyzer tool on the VM to diagnose connectivity or sensor conflicts. You may need to run the official MDE offboarding script to clean the device before re-onboarding.\r\n\r\n## 3. Finding: Orphaned or Abandoned Resource\r\n\r\nThis identifies a resource that is incurring costs but has no recent management activity, posing a potential risk. This applies to VMs in any power state, with the exception of AVD.\r\n\r\n**How to Identify in the Workbook:**\r\n*   **Last Activity Date:** `(blank)` or a very old date.\r\n*   **Last Human Activity:** `(blank)` or a very old date/contact.\r\n\r\n**Resolution:**\r\n1.  Use the `Last Human Activity` column to identify the last known person who interacted with the resource as a first point of contact.\r\n2.  Investigate the resource's purpose based on its name and tags.\r\n3.  If no owner can be found, create a plan to decommission the resource to reduce risk and cost.\r\n\r\n## 4. Finding: MDE is Healthy but Azure Extension Shows an Error\r\n\r\nThis often points to a healthy device that was onboarded to MDE through a \"direct\" method (like a script) instead of the automated Azure extension. While not a critical security failure, it indicates an underlying problem with the Azure VM Agent that should be fixed.\r\n\r\n**How to Identify in the Workbook:**\r\n*   **MDE Status:** `Onboarded`\r\n*   **MDE Sensor Health:** `Active`\r\n*   **VM Agent Health** or **Extension Status:** `Failed`, `Unknown`, or `Not Ready`\r\n\r\n**Resolution:**\r\nThe priority is to fix the Azure VM Agent to ensure future management and extensions can be deployed successfully. Follow the resolution steps in **Finding #1** to reinstall the agent. Once the agent is healthy, the MDE extension state should resolve itself automatically.\r\n"
+      },
+      "conditionalVisibility": {
+        "parameterName": "ShowHelp",
+        "comparison": "isEqualTo",
+        "value": "Yes"
+      },
+      "name": "ReadMe"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\r\n| where type =~ \"microsoft.hybridcompute/machines\" or type =~ \"microsoft.compute/virtualmachines\" or type =~  \"microsoft.compute/virtualmachinescalesets\"\r\n| extend id = tolower(id)\r\n| join kind=leftouter (\r\n    resources\r\n    | where type endswith '/extensions' and name in ('MDE.Windows', 'MDE.Linux')\r\n    | extend parentId = tolower(substring(id, 0, indexof(id, '/extensions')))\r\n    | project MdeName = name, MdeStatus = tostring(properties.provisioningState), parentId\r\n) on $left.id == $right.parentId\r\n| extend type = iif(type == \"microsoft.hybridcompute/machines\", \"Azure Arc\", \"Virtual Machine\")\r\n| extend provisioningState = properties.provisioningState\r\n| extend vmSize = properties.hardwareProfile.vmSize\r\n| extend computerName = properties.osProfile.computerName\r\n| extend computerName = iif(isempty(computerName), properties.extended.instanceView.computerName,computerName)\r\n| extend computerName = iif(isempty(computerName), split(id, \"/\").[-1], computerName)\r\n| extend adminUsername = properties.osProfile.adminUsername\r\n| extend provisionVMAgent = properties.osProfile.windowsConfiguration.provisionVMAgent\r\n| extend enableAutomaticUpdates = properties.osProfile.windowsConfiguration.enableAutomaticUpdates\r\n| extend timeCreated = properties.timeCreated\r\n| extend secureBootEnabled = properties.securityProfile.uefiSettings.secureBootEnabled\r\n| extend osName = tostring(iif(isempty(properties.extended.instanceView.osName), properties.storageProfile.osDisk.osType, properties.extended.instanceView.osName))\r\n| extend osName = iif(isempty(osName), properties.osType, osName)\r\n| extend osName = iif((osName contains \"Windows\" or osName == \"Linux\" or isempty(osName)), osName, strcat(\"Linux \", osName))\r\n| extend osName = iif(osName =~ \"windows\", \"Windows\", osName) \r\n| extend osName = iif(isempty(osName), \"Unknown\", osName) \r\n| extend displayStatus = properties.extended.instanceView.powerState.displayStatus\r\n| extend licenseType = properties.licenseType\r\n| extend osName = iif(isnull( osName), licenseType, osName)\r\n| extend MdeName = iif(isempty( MdeName), \"Missing\", MdeName)\r\n| extend MdeStatus = iif(isempty( MdeStatus), \"Missing\", MdeStatus)\r\n| extend VMAgent = case(provisionVMAgent==\"true\", \"Enabled\", isempty(provisionVMAgent), \"Unknown\", \"Disabled\")\r\n| extend AutoUpdates = case(enableAutomaticUpdates==\"true\", \"Enabled\", isempty(enableAutomaticUpdates), \"Unknown\", \"Disabled\")\r\n| extend SecureBoot = case(secureBootEnabled==\"true\", \"Enabled\", isempty(secureBootEnabled), \"Unknown\", \"Disabled\")\r\n| extend PowerState = case(displayStatus==\"VM stopped\", \"Stopped\", displayStatus==\"VM starting\", \"Starting\", displayStatus==\"VM running\", \"Running\", \"Deallocated\")\r\n| extend subscriptionId = strcat(\"/subscriptions/\", tostring(subscriptionId))\r\n| extend ExtensionTest = iif((MdeName == \"Missing\" or MdeStatus == \"Missing\"), \"Unknown\", \"Succeeded\")\r\n| extend VMAgent = iif((VMAgent==\"Unknown\" and MdeName != \"Missing\"), \"Enabled\", VMAgent)\r\n| extend Problem = case((VMAgent==\"Unknown\" and MdeName == \"Missing\"), \"VM Agent Missing\",\r\n            (VMAgent==\"Enabled\" and MdeName == \"Missing\"), \"MDE Extension Failed\", \"Good\")\r\n| project vmName=id, computerName, Problem, VMAgent, Extension=MdeName, ExtStatus=MdeStatus, AutoUpdates, SecureBoot, PowerState, osName,  Subscription=subscriptionId, resourceGroup, location, provisioningState, vmSize, adminUsername, ['tags'], type, ExtensionTest\r\n| where Subscription in ({Subscriptions})\r\n| where PowerState in ({Power})\r\n| where type in ({Workload})\r\n| where VMAgent in ({VMAgent})\r\n| where ExtensionTest in ({Extension})\r\n| where Problem in ({Problem})",
+        "size": 1,
+        "title": "All Azure VM & Arc from Resource Manager",
+        "queryType": 1,
+        "resourceType": "microsoft.resources/tenants",
+        "crossComponentResources": [
+          "value::tenant"
+        ],
+        "gridSettings": {
+          "rowLimit": 10000,
+          "filter": true
+        }
+      },
+      "conditionalVisibility": {
+        "parameterName": "HideInputs",
+        "comparison": "isNotEqualTo",
+        "value": "Yes"
+      },
+      "name": "AzureResourceView"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\r\n| summarize by subscriptionId",
+        "size": 1,
+        "queryType": 1,
+        "resourceType": "microsoft.resources/tenants",
+        "crossComponentResources": [
+          "value::tenant"
+        ],
+        "gridSettings": {
+          "rowLimit": 10000
+        }
+      },
+      "conditionalVisibility": {
+        "parameterName": "HideInputs",
+        "comparison": "isNotEqualTo",
+        "value": "Yes"
+      },
+      "name": "Subscription List"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "AzureActivity\r\n| extend ResourceProviderValue = tolower(ResourceProviderValue)\r\n| where ResourceProviderValue has_any (\"microsoft.compute\", \"microsoft.hybridcompute\")\r\n| where _ResourceId contains \"machines/\" and _ResourceId !contains \"extensions/\"\r\n| extend HumanActivityTime = iif(Caller contains \"@\", TimeGenerated, datetime(null))\r\n| extend HumanCaller = iif(Caller contains \"@\", Caller, \"\")\r\n| extend id_parts = split(_ResourceId, '/')\r\n| extend _ResourceId = iif(array_length(id_parts) > 9, strcat_array(array_slice(id_parts, 0, 8), '/'), _ResourceId )\r\n| summarize\r\n    (Last_Overall_Activity, Overall_Caller) = arg_max(TimeGenerated, Caller),\r\n    (Last_Human_Activity, Last_Admin) = arg_max(HumanActivityTime, HumanCaller)\r\n    by _ResourceId\r\n| extend Parts = split(_ResourceId, \"/\")\r\n| extend _ResourceId = tolower(tostring(strcat_array(array_slice(Parts, 0, 8), \"/\")))\r\n| project _ResourceId, Last_Admin, Last_Human_Activity, Last_Overall_Activity",
+        "size": 1,
+        "title": "AzureActivity Devices - Active Devices in Azure",
+        "timeContextFromParameter": "TImeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "{Workspce}"
+        ],
+        "gridSettings": {
+          "rowLimit": 10000,
+          "filter": true
+        }
+      },
+      "conditionalVisibility": {
+        "parameterName": "HideInputs",
+        "comparison": "isNotEqualTo",
+        "value": "Yes"
+      },
+      "name": "AzureActivityDevices"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "DeviceInfo\r\n| where isnotempty(AzureResourceId)\r\n| summarize arg_max(TimeGenerated, *) by AzureResourceId\r\n| extend IsAzureADJoined = iif(IsAzureADJoined == 1, \"Yes\", \"No\")\r\n| extend SubscriptionId = split(AzureResourceId, \"/\").[2]\r\n| extend SensorHealthState = iif( isempty(SensorHealthState), \"Unknown\", SensorHealthState)\r\n| project\r\n    TimeGenerated,\r\n    DeviceName,\r\n    DeviceId,\r\n    IsAzureADJoined,\r\n    MachineGroup,\r\n    OSPlatform,\r\n    OnboardingStatus,\r\n    SensorHealthState,\r\n    AzureResourceId = tolower(tostring(AzureResourceId)), SubscriptionId\r\n| where MachineGroup in ({Group})\r\n| where OSPlatform in ({OS})\r\n| where OnboardingStatus in ({Onboarding})\r\n| where SensorHealthState in ({Status})",
+        "size": 1,
+        "title": "Summary of Azure VM & Arc from MDE",
+        "timeContextFromParameter": "TImeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "{Workspce}"
+        ],
+        "gridSettings": {
+          "rowLimit": 10000,
+          "filter": true
+        }
+      },
+      "conditionalVisibility": {
+        "parameterName": "HideInputs",
+        "comparison": "isNotEqualTo",
+        "value": "Yes"
+      },
+      "name": "MDE_DeviceSummary"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "let adminSignins = SigninLogs\r\n| where TimeGenerated > ago(90d)\r\n| summarize arg_max(TimeGenerated, *) by UserPrincipalName\r\n| where UserPrincipalName contains \"admin@\" or UserPrincipalName contains \"adm@\" //Admin search patterns\r\n| extend username = tostring(split(UserPrincipalName, \"@\")[0])\r\n| extend nameParts = split(username, \".\")\r\n| extend firstName = tostring(nameParts[0])\r\n| extend lastName = tostring(nameParts[-2])\r\n| extend compare = strcat(firstName, lastName)\r\n| extend compare = translate(\"-\", \"\", compare)\r\n| extend compare = replace(@\"[0-9]\", \"\", compare)\r\n| project Admin_UPN=UserPrincipalName, Admin_DisplayName=Identity, compare;\r\nlet nonAdminSignins = SigninLogs\r\n| where TimeGenerated > ago(90d)\r\n| summarize arg_max(TimeGenerated, *) by UserPrincipalName\r\n| where UserPrincipalName !contains \"admin@\" or UserPrincipalName !contains \"adm@\"\r\n| extend username = tostring(split(UserPrincipalName, \"@\")[0])\r\n| extend nameParts = split(username, \".\")\r\n| extend firstName = tostring(nameParts[0])\r\n| extend lastName = iif(strlen(nameParts[1]) == 1, tostring(nameParts[2]), tostring(nameParts[1]))\r\n| extend compare = strcat(firstName, lastName)\r\n| extend compare = translate(\"-\", \"\", compare)\r\n| extend compare = replace(@\"[0-9]\", \"\", compare)\r\n| project User_UPN=UserPrincipalName, User_DisplayName=Identity, compare;\r\nadminSignins\r\n| join kind=leftouter (\r\nnonAdminSignins\r\n) on compare\r\n| summarize Correlated_User_UPNs = make_list(User_UPN) by Admin_UPN, Admin_DisplayName\r\n| project \r\n    Admin_DisplayName,\r\n    Admin_UPN, \r\n    Count = array_length(Correlated_User_UPNs),\r\n    Sample_User = Correlated_User_UPNs[0],\r\n    Correlated_User_UPNs",
+        "size": 1,
+        "title": "Human Contacts",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "{Workspce}"
+        ],
+        "gridSettings": {
+          "rowLimit": 10000,
+          "filter": true
+        }
+      },
+      "conditionalVisibility": {
+        "parameterName": "HideInputs",
+        "comparison": "isNotEqualTo",
+        "value": "Yes"
+      },
+      "name": "Human Contact"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\r\n| where type =~ \"microsoft.hybridcompute/machines\" or type =~ \"microsoft.compute/virtualmachines\" or type =~  \"microsoft.compute/virtualmachinescalesets\"\r\n| extend id = tolower(id)\r\n| join kind=leftouter (\r\n    resources\r\n    | where type endswith '/extensions' and name in ('MDE.Windows', 'MDE.Linux')\r\n    | extend parentId = tolower(substring(id, 0, indexof(id, '/extensions')))\r\n    | project MdeName = name, MdeStatus = tostring(properties.provisioningState), parentId\r\n) on $left.id == $right.parentId\r\n| extend type = iif(type == \"microsoft.hybridcompute/machines\", \"Azure Arc\", \"Virtual Machine\")\r\n| extend provisioningState = properties.provisioningState\r\n| extend vmSize = properties.hardwareProfile.vmSize\r\n| extend computerName = properties.osProfile.computerName\r\n| extend computerName = iif(isempty(computerName), properties.extended.instanceView.computerName,computerName)\r\n| extend computerName = iif(isempty(computerName), split(id, \"/\").[-1], computerName)\r\n| extend adminUsername = properties.osProfile.adminUsername\r\n| extend provisionVMAgent = properties.osProfile.windowsConfiguration.provisionVMAgent\r\n| extend enableAutomaticUpdates = properties.osProfile.windowsConfiguration.enableAutomaticUpdates\r\n| extend timeCreated = properties.timeCreated\r\n| extend secureBootEnabled = properties.securityProfile.uefiSettings.secureBootEnabled\r\n| extend osName = tostring(iif(isempty(properties.extended.instanceView.osName), properties.storageProfile.osDisk.osType, properties.extended.instanceView.osName))\r\n| extend osName = iif(isempty(osName), properties.osType, osName)\r\n| extend osName = iif((osName contains \"Windows\" or osName == \"Linux\" or isempty(osName)), osName, strcat(\"Linux \", osName))\r\n| extend osName = iif(osName =~ \"windows\", \"Windows\", osName) \r\n| extend osName = iif(isempty(osName), \"Unknown\", osName) \r\n| extend displayStatus = properties.extended.instanceView.powerState.displayStatus\r\n| extend licenseType = properties.licenseType\r\n| extend osName = iif(isnull( osName), licenseType, osName)\r\n| extend MdeName = iif(isempty( MdeName), \"Missing\", MdeName)\r\n| extend MdeStatus = iif(isempty( MdeStatus), \"Missing\", MdeStatus)\r\n| extend VMAgent = case(provisionVMAgent==\"true\", \"Enabled\", isempty(provisionVMAgent), \"Unknown\", \"Disabled\")\r\n| extend AutoUpdates = case(enableAutomaticUpdates==\"true\", \"Enabled\", isempty(enableAutomaticUpdates), \"Unknown\", \"Disabled\")\r\n| extend SecureBoot = case(secureBootEnabled==\"true\", \"Enabled\", isempty(secureBootEnabled), \"Unknown\", \"Disabled\")\r\n| extend PowerState = case(displayStatus==\"VM stopped\", \"Stopped\", displayStatus==\"VM starting\", \"Starting\", displayStatus==\"VM running\", \"Running\", \"Deallocated\")\r\n| extend subscriptionId = strcat(\"/subscriptions/\", tostring(subscriptionId))\r\n| extend ExtensionTest = iif((MdeName == \"Missing\" or MdeStatus == \"Missing\"), \"Unknown\", \"Succeeded\")\r\n| extend VMAgent = iif((VMAgent==\"Unknown\" and MdeName != \"Missing\"), \"Enabled\", VMAgent)\r\n| extend Problem = case((VMAgent==\"Unknown\" and MdeName == \"Missing\"), \"VM Agent Missing\",\r\n            (VMAgent==\"Enabled\" and MdeName == \"Missing\"), \"MDE Extension Failed\", \"Good\")\r\n| project vmName=id, computerName, Problem, VMAgent, Extension=MdeName, ExtStatus=MdeStatus, AutoUpdates, SecureBoot, PowerState, osName,  Subscription=subscriptionId, resourceGroup, location, provisioningState, vmSize, adminUsername, ['tags'], type, ExtensionTest\r\n| where Subscription in ({Subscriptions})\r\n| where PowerState in ({Power})\r\n| where type in ({Workload})\r\n| where VMAgent in ({VMAgent})\r\n| where ExtensionTest in ({Extension})\r\n| where Problem in ({Problem})\r\n| summarize count() by Extension",
+        "size": 4,
+        "queryType": 1,
+        "resourceType": "microsoft.resources/tenants",
+        "crossComponentResources": [
+          "value::tenant"
+        ],
+        "visualization": "piechart",
+        "gridSettings": {
+          "rowLimit": 10000,
+          "filter": true
+        },
+        "tileSettings": {
+          "showBorder": false
+        },
+        "statSettings": {
+          "valueField": "Count",
+          "valueAggregation": "None",
+          "valueTooltipSettings": {
+            "tooltip": "Based on Resource Graph, accurate count of all compute resources"
+          },
+          "colorSettings": {
+            "type": "static",
+            "mode": "background",
+            "heatmapPalette": "greenRed",
+            "thresholdsGrid": []
+          },
+          "iconSettings": {
+            "thresholdsGrid": []
+          },
+          "numberFormatSettings": {
+            "unit": 0,
+            "options": {
+              "style": "decimal"
+            }
+          },
+          "tagText": "Count of Azure Commpute Resources",
+          "valueFontStyle": "auto"
+        }
+      },
+      "conditionalVisibility": {
+        "parameterName": "SlimView",
+        "comparison": "isEqualTo",
+        "value": "No"
+      },
+      "customWidth": "35",
+      "name": "MDE Extension Status -"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\r\n| where type =~ \"microsoft.hybridcompute/machines\" or type =~ \"microsoft.compute/virtualmachines\" or type =~  \"microsoft.compute/virtualmachinescalesets\"\r\n| extend id = tolower(id)\r\n| join kind=leftouter (\r\n    resources\r\n    | where type endswith '/extensions' and name in ('MDE.Windows', 'MDE.Linux')\r\n    | extend parentId = tolower(substring(id, 0, indexof(id, '/extensions')))\r\n    | project MdeName = name, MdeStatus = tostring(properties.provisioningState), parentId\r\n) on $left.id == $right.parentId\r\n| extend type = iif(type == \"microsoft.hybridcompute/machines\", \"Azure Arc\", \"Virtual Machine\")\r\n| extend provisioningState = properties.provisioningState\r\n| extend vmSize = properties.hardwareProfile.vmSize\r\n| extend computerName = properties.osProfile.computerName\r\n| extend computerName = iif(isempty(computerName), properties.extended.instanceView.computerName,computerName)\r\n| extend computerName = iif(isempty(computerName), split(id, \"/\").[-1], computerName)\r\n| extend adminUsername = properties.osProfile.adminUsername\r\n| extend provisionVMAgent = properties.osProfile.windowsConfiguration.provisionVMAgent\r\n| extend enableAutomaticUpdates = properties.osProfile.windowsConfiguration.enableAutomaticUpdates\r\n| extend timeCreated = properties.timeCreated\r\n| extend secureBootEnabled = properties.securityProfile.uefiSettings.secureBootEnabled\r\n| extend osName = tostring(iif(isempty(properties.extended.instanceView.osName), properties.storageProfile.osDisk.osType, properties.extended.instanceView.osName))\r\n| extend osName = iif(isempty(osName), properties.osType, osName)\r\n| extend osName = iif((osName contains \"Windows\" or osName == \"Linux\" or isempty(osName)), osName, strcat(\"Linux \", osName))\r\n| extend osName = iif(osName =~ \"windows\", \"Windows\", osName) \r\n| extend osName = iif(isempty(osName), \"Unknown\", osName) \r\n| extend displayStatus = properties.extended.instanceView.powerState.displayStatus\r\n| extend licenseType = properties.licenseType\r\n| extend osName = iif(isnull( osName), licenseType, osName)\r\n| extend MdeName = iif(isempty( MdeName), \"Missing\", MdeName)\r\n| extend MdeStatus = iif(isempty( MdeStatus), \"Missing\", MdeStatus)\r\n| extend VMAgent = case(provisionVMAgent==\"true\", \"Enabled\", isempty(provisionVMAgent), \"Unknown\", \"Disabled\")\r\n| extend AutoUpdates = case(enableAutomaticUpdates==\"true\", \"Enabled\", isempty(enableAutomaticUpdates), \"Unknown\", \"Disabled\")\r\n| extend SecureBoot = case(secureBootEnabled==\"true\", \"Enabled\", isempty(secureBootEnabled), \"Unknown\", \"Disabled\")\r\n| extend PowerState = case(displayStatus==\"VM stopped\", \"Stopped\", displayStatus==\"VM starting\", \"Starting\", displayStatus==\"VM running\", \"Running\", \"Deallocated\")\r\n| extend subscriptionId = strcat(\"/subscriptions/\", tostring(subscriptionId))\r\n| extend ExtensionTest = iif((MdeName == \"Missing\" or MdeStatus == \"Missing\"), \"Unknown\", \"Succeeded\")\r\n| extend VMAgent = iif((VMAgent==\"Unknown\" and MdeName != \"Missing\"), \"Enabled\", VMAgent)\r\n| extend Problem = case((VMAgent==\"Unknown\" and MdeName == \"Missing\"), \"VM Agent Missing\",\r\n            (VMAgent==\"Enabled\" and MdeName == \"Missing\"), \"MDE Extension Failed\", \"Good\")\r\n| project vmName=id, computerName, Problem, VMAgent, Extension=MdeName, ExtStatus=MdeStatus, AutoUpdates, SecureBoot, PowerState, osName,  Subscription=subscriptionId, resourceGroup, location, provisioningState, vmSize, adminUsername, ['tags'], type, ExtensionTest\r\n| where Subscription in ({Subscriptions})\r\n| where PowerState in ({Power})\r\n| where type in ({Workload})\r\n| where VMAgent in ({VMAgent})\r\n| where ExtensionTest in ({Extension})\r\n| where Problem in ({Problem})| count",
+        "size": 4,
+        "queryType": 1,
+        "resourceType": "microsoft.resources/tenants",
+        "crossComponentResources": [
+          "value::tenant"
+        ],
+        "visualization": "stat",
+        "gridSettings": {
+          "rowLimit": 10000,
+          "filter": true
+        },
+        "tileSettings": {
+          "showBorder": false
+        },
+        "statSettings": {
+          "valueField": "Count",
+          "valueAggregation": "None",
+          "valueTooltipSettings": {
+            "tooltip": "Based on Resource Graph, accurate count of all compute resources"
+          },
+          "colorSettings": {
+            "type": "static",
+            "mode": "background",
+            "heatmapPalette": "greenRed",
+            "thresholdsGrid": []
+          },
+          "iconSettings": {
+            "thresholdsGrid": []
+          },
+          "numberFormatSettings": {
+            "unit": 0,
+            "options": {
+              "style": "decimal"
+            }
+          },
+          "tagText": "Azure Compute",
+          "valueFontStyle": "mediumPlus"
+        }
+      },
+      "conditionalVisibility": {
+        "parameterName": "SlimView",
+        "comparison": "isEqualTo",
+        "value": "No"
+      },
+      "customWidth": "10",
+      "name": "AzureResourceCount"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "AzureActivity\r\n| extend ResourceProviderValue = tolower(ResourceProviderValue)\r\n| where ResourceProviderValue has_any (\"microsoft.compute\", \"microsoft.hybridcompute\")\r\n| where _ResourceId contains \"machines/\" and _ResourceId !contains \"extensions/\"\r\n| extend HumanActivityTime = iif(Caller contains \"@\", TimeGenerated, datetime(null))\r\n| extend HumanCaller = iif(Caller contains \"@\", Caller, \"\")\r\n| extend id_parts = split(_ResourceId, '/')\r\n| extend _ResourceId = iif(array_length(id_parts) > 9, strcat_array(array_slice(id_parts, 0, 8), '/'), _ResourceId )\r\n| summarize\r\n    (Last_Overall_Activity, Overall_Caller) = arg_max(TimeGenerated, Caller),\r\n    (Last_Human_Activity, Last_Admin) = arg_max(HumanActivityTime, HumanCaller)\r\n    by _ResourceId\r\n| extend Parts = split(_ResourceId, \"/\")\r\n| extend _ResourceId = tolower(tostring(strcat_array(array_slice(Parts, 0, 8), \"/\")))\r\n| project _ResourceId, Last_Admin, Last_Human_Activity, Last_Overall_Activity | count",
+        "size": 4,
+        "timeContextFromParameter": "TImeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "{Workspce}"
+        ],
+        "visualization": "stat",
+        "gridSettings": {
+          "rowLimit": 10000,
+          "filter": true
+        },
+        "statSettings": {
+          "valueAggregation": "None",
+          "valueTooltipSettings": {
+            "tooltip": "Based on time range, count of devices with recent activity"
+          },
+          "colorSettings": {
+            "type": "static",
+            "mode": "background",
+            "heatmapPalette": "greenRed",
+            "thresholdsGrid": []
+          },
+          "iconSettings": {
+            "thresholdsGrid": []
+          },
+          "numberFormatSettings": {
+            "unit": 0,
+            "options": {
+              "style": "decimal"
+            }
+          },
+          "tagText": "Active Resources",
+          "valueFontStyle": "mediumPlus"
+        }
+      },
+      "conditionalVisibility": {
+        "parameterName": "SlimView",
+        "comparison": "isEqualTo",
+        "value": "No"
+      },
+      "customWidth": "10",
+      "name": "AzureActivityDevicesCount"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "DeviceInfo\r\n| where isnotempty(AzureResourceId)\r\n| summarize arg_max(TimeGenerated, *) by DeviceId\r\n| summarize arg_max(TimeGenerated, *) by AzureResourceId\r\n| extend IsAzureADJoined = iif(IsAzureADJoined == 1, \"Yes\", \"No\")\r\n| extend SubscriptionId = split(AzureResourceId, \"/\").[2]\r\n| project\r\n    TimeGenerated,\r\n    DeviceName,\r\n    DeviceId,\r\n    IsAzureADJoined,\r\n    MachineGroup,\r\n    OSPlatform,\r\n    OnboardingStatus,\r\n    SensorHealthState,\r\n    AzureResourceId = tolower(tostring(AzureResourceId)), SubscriptionId\r\n| where MachineGroup in ({Group})\r\n| where OSPlatform in ({OS})\r\n| where OnboardingStatus in ({Onboarding})\r\n| where SensorHealthState in ({Status}) |count",
+        "size": 4,
+        "timeContextFromParameter": "TImeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "{Workspce}"
+        ],
+        "visualization": "stat",
+        "gridSettings": {
+          "rowLimit": 10000,
+          "filter": true
+        },
+        "statSettings": {
+          "valueAggregation": "None",
+          "valueTooltipSettings": {
+            "tooltip": "Count of MDE devices with Azure resource ID, may have duplicates or other tenants"
+          },
+          "colorSettings": {
+            "type": "static",
+            "mode": "background",
+            "heatmapPalette": "greenRed",
+            "thresholdsGrid": []
+          },
+          "iconSettings": {
+            "thresholdsGrid": []
+          },
+          "numberFormatSettings": {
+            "unit": 0,
+            "options": {
+              "style": "decimal"
+            }
+          },
+          "tagText": "Found in MDE",
+          "valueFontStyle": "mediumPlus"
+        }
+      },
+      "conditionalVisibility": {
+        "parameterName": "SlimView",
+        "comparison": "isEqualTo",
+        "value": "No"
+      },
+      "customWidth": "10",
+      "name": "MDECount"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "DeviceInfo\r\n| where isnotempty(AzureResourceId)\r\n| summarize arg_max(TimeGenerated, *) by DeviceId\r\n| summarize arg_max(TimeGenerated, *) by AzureResourceId\r\n| extend IsAzureADJoined = iif(IsAzureADJoined == 1, \"Yes\", \"No\")\r\n| extend SubscriptionId = split(AzureResourceId, \"/\").[2]\r\n| extend SensorHealthState = iif( isempty(SensorHealthState), \"Unknown\", SensorHealthState)\r\n| project\r\n    TimeGenerated,\r\n    DeviceName,\r\n    DeviceId,\r\n    IsAzureADJoined,\r\n    MachineGroup,\r\n    OSPlatform,\r\n    OnboardingStatus,\r\n    SensorHealthState,\r\n    AzureResourceId = tolower(tostring(AzureResourceId)), SubscriptionId\r\n| where MachineGroup in ({Group})\r\n| where OSPlatform in ({OS})\r\n| where OnboardingStatus in ({Onboarding})\r\n| where SensorHealthState in ({Status})\r\n| summarize count() by OnboardingStatus",
+        "size": 4,
+        "timeContextFromParameter": "TImeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "{Workspce}"
+        ],
+        "visualization": "piechart",
+        "gridSettings": {
+          "rowLimit": 10000,
+          "filter": true
+        },
+        "tileSettings": {
+          "showBorder": false
+        },
+        "statSettings": {
+          "valueField": "Count",
+          "valueAggregation": "None",
+          "valueTooltipSettings": {
+            "tooltip": "Based on Resource Graph, accurate count of all compute resources"
+          },
+          "colorSettings": {
+            "type": "static",
+            "mode": "background",
+            "heatmapPalette": "greenRed",
+            "thresholdsGrid": []
+          },
+          "iconSettings": {
+            "thresholdsGrid": []
+          },
+          "numberFormatSettings": {
+            "unit": 0,
+            "options": {
+              "style": "decimal"
+            }
+          },
+          "tagText": "Count of Azure Commpute Resources",
+          "valueFontStyle": "auto"
+        }
+      },
+      "conditionalVisibility": {
+        "parameterName": "SlimView",
+        "comparison": "isEqualTo",
+        "value": "No"
+      },
+      "customWidth": "33",
+      "name": "MDE Onboarding Status -"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"a3ca39ab-349e-4dd1-8887-263f4a585042\",\"mergeType\":\"leftouter\",\"leftTable\":\"AzureResourceView\",\"rightTable\":\"AzureActivityDevices\",\"leftColumn\":\"vmName\",\"rightColumn\":\"_ResourceId\"},{\"id\":\"a3ca39ab-349e-4dd1-8887-263f4a585087\",\"mergeType\":\"leftouter\",\"leftTable\":\"AzureResourceView\",\"rightTable\":\"MDE_DeviceSummary\",\"leftColumn\":\"vmName\",\"rightColumn\":\"AzureResourceId\"},{\"id\":\"85aceb16-8697-4d37-bfbd-a5be11a09239\",\"mergeType\":\"leftouter\",\"leftTable\":\"AzureActivityDevices\",\"rightTable\":\"Human Contact\",\"leftColumn\":\"Last_Admin\",\"rightColumn\":\"Admin_UPN\"}],\"projectRename\":[{\"originalName\":\"[AzureResourceView].vmName\",\"mergedName\":\"vmName\",\"fromId\":\"a3ca39ab-349e-4dd1-8887-263f4a585042\"},{\"originalName\":\"[AzureResourceView].computerName\",\"mergedName\":\"computerName\",\"fromId\":\"a3ca39ab-349e-4dd1-8887-263f4a585042\"},{\"originalName\":\"[AzureResourceView].Problem\",\"mergedName\":\"Problem\",\"fromId\":\"a3ca39ab-349e-4dd1-8887-263f4a585042\"},{\"originalName\":\"[AzureResourceView].type\",\"mergedName\":\"Type\",\"fromId\":\"a3ca39ab-349e-4dd1-8887-263f4a585042\"},{\"originalName\":\"[AzureResourceView].osName\",\"mergedName\":\"osName\",\"fromId\":\"a3ca39ab-349e-4dd1-8887-263f4a585042\"},{\"originalName\":\"[AzureResourceView].VMAgent\",\"mergedName\":\"VMAgent\",\"fromId\":\"a3ca39ab-349e-4dd1-8887-263f4a585042\"},{\"originalName\":\"[AzureResourceView].ExtStatus\",\"mergedName\":\"MDE_Extension\",\"fromId\":\"a3ca39ab-349e-4dd1-8887-263f4a585042\"},{\"originalName\":\"[AzureResourceView].SecureBoot\",\"mergedName\":\"SecureBoot\",\"fromId\":\"a3ca39ab-349e-4dd1-8887-263f4a585042\"},{\"originalName\":\"[AzureResourceView].AutoUpdates\",\"mergedName\":\"AutoUpdates\",\"fromId\":\"a3ca39ab-349e-4dd1-8887-263f4a585042\"},{\"originalName\":\"[AzureResourceView].PowerState\",\"mergedName\":\"PowerState\",\"fromId\":\"a3ca39ab-349e-4dd1-8887-263f4a585042\"},{\"originalName\":\"[Added column]\",\"mergedName\":\"Activity_Status\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"_ResourceId\",\"operator\":\"isNotNull\",\"rightValType\":\"column\",\"resultValType\":\"static\",\"resultVal\":\"Active\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"static\",\"resultVal\":\"Inactive\"}}]},{\"originalName\":\"[AzureActivityDevices].Last_Admin\",\"mergedName\":\"Last_Admin\",\"fromId\":\"a3ca39ab-349e-4dd1-8887-263f4a585042\"},{\"originalName\":\"[AzureActivityDevices].Last_Human_Activity\",\"mergedName\":\"Last_Human_Activity\",\"fromId\":\"a3ca39ab-349e-4dd1-8887-263f4a585042\"},{\"originalName\":\"[AzureActivityDevices].Last_Overall_Activity\",\"mergedName\":\"Last_Overall_Activity\",\"fromId\":\"a3ca39ab-349e-4dd1-8887-263f4a585042\"},{\"originalName\":\"[AzureActivityDevices].Last_Updated\",\"mergedName\":\"Last_Updated\",\"fromId\":\"a3ca39ab-349e-4dd1-8887-263f4a585042\"},{\"originalName\":\"[AzureActivityDevices].Lasst_Admin\",\"mergedName\":\"Last_Admin\",\"fromId\":\"a3ca39ab-349e-4dd1-8887-263f4a585042\"},{\"originalName\":\"[AzureResourceView].Subscription\",\"mergedName\":\"Subscription\",\"fromId\":\"a3ca39ab-349e-4dd1-8887-263f4a585042\"},{\"originalName\":\"[AzureResourceView].resourceGroup\",\"mergedName\":\"resourceGroup\",\"fromId\":\"a3ca39ab-349e-4dd1-8887-263f4a585042\"},{\"originalName\":\"[AzureResourceView].location\",\"mergedName\":\"Region\",\"fromId\":\"a3ca39ab-349e-4dd1-8887-263f4a585042\"},{\"originalName\":\"[Human Contact].Sample_User\",\"mergedName\":\"Contact User Sample\",\"fromId\":\"85aceb16-8697-4d37-bfbd-a5be11a09239\"},{\"originalName\":\"[Human Contact].Correlated_User_UPNs\",\"mergedName\":\"Potential Contacts\",\"fromId\":\"85aceb16-8697-4d37-bfbd-a5be11a09239\"},{\"originalName\":\"[MDE_DeviceSummary].AzureResourceId\"},{\"originalName\":\"[MDE_DeviceSummary].OSPlatform\"},{\"originalName\":\"[MDE_DeviceSummary].DeviceName\"},{\"originalName\":\"[AzureResourceView].ExtensionTest\"},{\"originalName\":\"[AzureResourceView].tags\"},{\"originalName\":\"[AzureResourceView].adminUsername\"},{\"originalName\":\"[AzureResourceView].provisioningState\"},{\"originalName\":\"[AzureResourceView].vmSize\"},{\"originalName\":\"[MDE_DeviceSummary].DeviceId\"},{\"originalName\":\"[MDE_DeviceSummary].MachineGroup\"},{\"originalName\":\"[AzureResourceView].Extension\"},{\"originalName\":\"[MDE_DeviceSummary].SubscriptionId\"},{\"originalName\":\"[MDE_DeviceSummary].SensorHealthState\"},{\"originalName\":\"[MDE_DeviceSummary].OnboardingStatus\"},{\"originalName\":\"[MDE_DeviceSummary].IsAzureADJoined\"},{\"originalName\":\"[MDE_DeviceSummary].TimeGenerated\"},{\"originalName\":\"[AzureActivityDevices].Parts\"},{\"originalName\":\"[AzureActivityDevices].Overall_Caller\"},{\"originalName\":\"[AzureActivityDevices]._ResourceId\"},{\"originalName\":\"[Human Contact].Admin_DisplayName\"},{\"originalName\":\"[Human Contact].Admin_UPN\"},{\"originalName\":\"[Human Contact].Count\"}]}",
+        "size": 0,
+        "title": "Azure Compute Staus Review",
+        "showExportToExcel": true,
+        "queryType": 7,
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "vmName",
+              "formatter": 0,
+              "formatOptions": {
+                "customColumnWidthSetting": "20ch"
+              }
+            },
+            {
+              "columnMatch": "computerName",
+              "formatter": 1,
+              "formatOptions": {
+                "customColumnWidthSetting": "20ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "Computer name may not match the VMName, MDE uses computer name"
+              }
+            },
+            {
+              "columnMatch": "Problem",
+              "formatter": 18,
+              "formatOptions": {
+                "thresholdsOptions": "colors",
+                "thresholdsGrid": [
+                  {
+                    "operator": "==",
+                    "thresholdValue": "Good",
+                    "representation": "green",
+                    "text": "{0}{1}"
+                  },
+                  {
+                    "operator": "Default",
+                    "thresholdValue": null,
+                    "representation": "redBright",
+                    "text": "{0}{1}"
+                  }
+                ],
+                "customColumnWidthSetting": "12ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "Explanation of possible VM issue"
+              }
+            },
+            {
+              "columnMatch": "Type",
+              "formatter": 0,
+              "formatOptions": {
+                "customColumnWidthSetting": "12ch"
+              }
+            },
+            {
+              "columnMatch": "osName",
+              "formatter": 0,
+              "formatOptions": {
+                "customColumnWidthSetting": "12ch"
+              }
+            },
+            {
+              "columnMatch": "VMAgent",
+              "formatter": 18,
+              "formatOptions": {
+                "thresholdsOptions": "colors",
+                "thresholdsGrid": [
+                  {
+                    "operator": "==",
+                    "thresholdValue": "Enabled",
+                    "representation": "green",
+                    "text": "{0}{1}"
+                  },
+                  {
+                    "operator": "Default",
+                    "thresholdValue": null,
+                    "representation": "redBright",
+                    "text": "{0}{1}"
+                  }
+                ],
+                "customColumnWidthSetting": "12ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "The VM Agent is required for proper Azure management"
+              }
+            },
+            {
+              "columnMatch": "MDE_Extension",
+              "formatter": 18,
+              "formatOptions": {
+                "thresholdsOptions": "colors",
+                "thresholdsGrid": [
+                  {
+                    "operator": "==",
+                    "thresholdValue": "Succeeded",
+                    "representation": "green",
+                    "text": "{0}{1}"
+                  },
+                  {
+                    "operator": "Default",
+                    "thresholdValue": null,
+                    "representation": "redBright",
+                    "text": "{0}{1}"
+                  }
+                ],
+                "customColumnWidthSetting": "12ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "This extension, deployed by the VM Agent, attempts MDE onboarding"
+              }
+            },
+            {
+              "columnMatch": "SecureBoot",
+              "formatter": 18,
+              "formatOptions": {
+                "thresholdsOptions": "colors",
+                "thresholdsGrid": [
+                  {
+                    "operator": "==",
+                    "thresholdValue": "Enabled",
+                    "representation": "green",
+                    "text": "{0}{1}"
+                  },
+                  {
+                    "operator": "Default",
+                    "thresholdValue": null,
+                    "representation": "redBright",
+                    "text": "{0}{1}"
+                  }
+                ],
+                "customColumnWidthSetting": "12ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "Protects against boot-level malware"
+              }
+            },
+            {
+              "columnMatch": "AutoUpdates",
+              "formatter": 18,
+              "formatOptions": {
+                "thresholdsOptions": "colors",
+                "thresholdsGrid": [
+                  {
+                    "operator": "==",
+                    "thresholdValue": "Enabled",
+                    "representation": "green",
+                    "text": "{0}{1}"
+                  },
+                  {
+                    "operator": "Default",
+                    "thresholdValue": null,
+                    "representation": "redBright",
+                    "text": "{0}{1}"
+                  }
+                ],
+                "customColumnWidthSetting": "12ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "Automatically patches and updates"
+              }
+            },
+            {
+              "columnMatch": "PowerState",
+              "formatter": 18,
+              "formatOptions": {
+                "thresholdsOptions": "icons",
+                "thresholdsGrid": [
+                  {
+                    "operator": "==",
+                    "thresholdValue": "Running",
+                    "representation": "success",
+                    "text": "{0}{1}"
+                  },
+                  {
+                    "operator": "Default",
+                    "thresholdValue": null,
+                    "representation": "stopped",
+                    "text": "{0}{1}"
+                  }
+                ],
+                "customColumnWidthSetting": "12ch"
+              },
+              "numberFormat": {
+                "unit": 0,
+                "options": {
+                  "style": "decimal"
+                }
+              }
+            },
+            {
+              "columnMatch": "Activity_Status",
+              "formatter": 18,
+              "formatOptions": {
+                "thresholdsOptions": "colors",
+                "thresholdsGrid": [
+                  {
+                    "operator": "==",
+                    "thresholdValue": "Active",
+                    "representation": "green",
+                    "text": "{0}{1}"
+                  },
+                  {
+                    "operator": "Default",
+                    "thresholdValue": null,
+                    "representation": "gray",
+                    "text": "{0}{1}"
+                  }
+                ],
+                "customColumnWidthSetting": "12ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "Inactivity is based on a lack of Azure Activity logs"
+              }
+            },
+            {
+              "columnMatch": "Last_Admin",
+              "formatter": 0,
+              "formatOptions": {
+                "customColumnWidthSetting": "12ch"
+              },
+              "tooltipFormat": {
+                "tooltip": "Last human admin on record, potential contact"
+              }
+            },
+            {
+              "columnMatch": "Last_Human_Activity",
+              "formatter": 6,
+              "formatOptions": {
+                "customColumnWidthSetting": "12ch"
+              },
+              "numberFormat": {
+                "unit": 0,
+                "options": {
+                  "style": "decimal"
+                }
+              },
+              "dateFormat": {
+                "showUtcTime": true,
+                "formatName": "shortDatePattern"
+              }
+            },
+            {
+              "columnMatch": "Last_Overall_Activity",
+              "formatter": 6,
+              "formatOptions": {
+                "customColumnWidthSetting": "12ch"
+              },
+              "dateFormat": {
+                "showUtcTime": true,
+                "formatName": "shortDatePattern"
+              },
+              "tooltipFormat": {
+                "tooltip": "Last recorded Azure Activity"
+              }
+            },
+            {
+              "columnMatch": "Subscription",
+              "formatter": 0,
+              "formatOptions": {
+                "customColumnWidthSetting": "12ch"
+              }
+            },
+            {
+              "columnMatch": "resourceGroup",
+              "formatter": 0,
+              "formatOptions": {
+                "customColumnWidthSetting": "12ch"
+              }
+            },
+            {
+              "columnMatch": "Region",
+              "formatter": 0,
+              "formatOptions": {
+                "customColumnWidthSetting": "12ch"
+              }
+            },
+            {
+              "columnMatch": "Contact User Sample",
+              "formatter": 0,
+              "formatOptions": {
+                "customColumnWidthSetting": "25ch"
+              }
+            },
+            {
+              "columnMatch": "Potential Contacts",
+              "formatter": 0,
+              "formatOptions": {
+                "customColumnWidthSetting": "25ch"
+              }
+            },
+            {
+              "columnMatch": "_ResourceId",
+              "formatter": 5
+            },
+            {
+              "columnMatch": "ExtStatus",
+              "formatter": 5,
+              "formatOptions": {
+                "customColumnWidthSetting": "12"
+              },
+              "tooltipFormat": {
+                "tooltip": "Verified that the MDE extension was successful"
+              }
+            }
+          ],
+          "rowLimit": 10000,
+          "filter": true
+        }
+      },
+      "name": "MergeARM_AzureActivity"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "title": "View the Table Inputs - Merged Above",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "resources\r\n| where type =~ \"microsoft.hybridcompute/machines\" or type =~ \"microsoft.compute/virtualmachines\" or type =~  \"microsoft.compute/virtualmachinescalesets\"\r\n| extend id = tolower(id)\r\n| join kind=leftouter (\r\n    resources\r\n    | where type endswith '/extensions' and name in ('MDE.Windows', 'MDE.Linux')\r\n    | extend parentId = tolower(substring(id, 0, indexof(id, '/extensions')))\r\n    | project MdeName = name, MdeStatus = tostring(properties.provisioningState), parentId\r\n) on $left.id == $right.parentId\r\n| extend type = iif(type == \"microsoft.hybridcompute/machines\", \"Azure Arc\", \"Virtual Machine\")\r\n| extend provisioningState = properties.provisioningState\r\n| extend vmSize = properties.hardwareProfile.vmSize\r\n| extend computerName = properties.osProfile.computerName\r\n| extend computerName = iif(isempty(computerName), properties.extended.instanceView.computerName,computerName)\r\n| extend computerName = iif(isempty(computerName), split(id, \"/\").[-1], computerName)\r\n| extend adminUsername = properties.osProfile.adminUsername\r\n| extend provisionVMAgent = properties.osProfile.windowsConfiguration.provisionVMAgent\r\n| extend enableAutomaticUpdates = properties.osProfile.windowsConfiguration.enableAutomaticUpdates\r\n| extend timeCreated = properties.timeCreated\r\n| extend secureBootEnabled = properties.securityProfile.uefiSettings.secureBootEnabled\r\n| extend osName = tostring(iif(isempty(properties.extended.instanceView.osName), properties.storageProfile.osDisk.osType, properties.extended.instanceView.osName))\r\n| extend osName = iif(isempty(osName), properties.osType, osName)\r\n| extend osName = iif((osName contains \"Windows\" or osName == \"Linux\" or isempty(osName)), osName, strcat(\"Linux \", osName))\r\n| extend osName = iif(osName =~ \"windows\", \"Windows\", osName) \r\n| extend osName = iif(isempty(osName), \"Unknown\", osName) \r\n| extend displayStatus = properties.extended.instanceView.powerState.displayStatus\r\n| extend licenseType = properties.licenseType\r\n| extend osName = iif(isnull( osName), licenseType, osName)\r\n| extend MdeName = iif(isempty( MdeName), \"Missing\", MdeName)\r\n| extend MdeStatus = iif(isempty( MdeStatus), \"Missing\", MdeStatus)\r\n| extend VMAgent = case(provisionVMAgent==\"true\", \"Enabled\", isempty(provisionVMAgent), \"Unknown\", \"Disabled\")\r\n| extend AutoUpdates = case(enableAutomaticUpdates==\"true\", \"Enabled\", isempty(enableAutomaticUpdates), \"Unknown\", \"Disabled\")\r\n| extend SecureBoot = case(secureBootEnabled==\"true\", \"Enabled\", isempty(secureBootEnabled), \"Unknown\", \"Disabled\")\r\n| extend PowerState = case(displayStatus==\"VM stopped\", \"Stopped\", displayStatus==\"VM starting\", \"Starting\", displayStatus==\"VM running\", \"Running\", \"Deallocated\")\r\n| extend subscriptionId = strcat(\"/subscriptions/\", tostring(subscriptionId))\r\n| extend ExtensionTest = iif((MdeName == \"Missing\" or MdeStatus == \"Missing\"), \"Unknown\", \"Succeeded\")\r\n| extend VMAgent = iif((VMAgent==\"Unknown\" and MdeName != \"Missing\"), \"Enabled\", VMAgent)\r\n| extend Problem = case((VMAgent==\"Unknown\" and MdeName == \"Missing\"), \"VM Agent Missing\",\r\n            (VMAgent==\"Enabled\" and MdeName == \"Missing\"), \"MDE Extension Failed\", \"Good\")\r\n| project vmName=id, computerName, Problem, VMAgent, Extension=MdeName, ExtStatus=MdeStatus, AutoUpdates, SecureBoot, PowerState, osName,  Subscription=subscriptionId, resourceGroup, location, provisioningState, vmSize, adminUsername, ['tags'], type, ExtensionTest\r\n| where Subscription in ({Subscriptions})\r\n| where PowerState in ({Power})\r\n| where type in ({Workload})\r\n| where VMAgent in ({VMAgent})\r\n| where ExtensionTest in ({Extension})\r\n| where Problem in ({Problem})",
+              "size": 1,
+              "title": "All Azure VM & Arc from Resource Manager",
+              "queryType": 1,
+              "resourceType": "microsoft.resources/tenants",
+              "crossComponentResources": [
+                "value::tenant"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "vmName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "computerName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Problem",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "VMAgent",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Extension",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "ExtStatus",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "AutoUpdates",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "SecureBoot",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "PowerState",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "osName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Subscription",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "325ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "resourceGroup",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "location",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "provisioningState",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "vmSize",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "adminUsername",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "tags",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "type",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "ExtensionTest",
+                    "formatter": 5
+                  }
+                ],
+                "rowLimit": 10000,
+                "filter": true
+              }
+            },
+            "name": "AzureResourceView - Copy"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "AzureActivity\r\n| extend ResourceProviderValue = tolower(ResourceProviderValue)\r\n| where ResourceProviderValue has_any (\"microsoft.compute\", \"microsoft.hybridcompute\")\r\n| where _ResourceId contains \"machines/\" and _ResourceId !contains \"extensions/\"\r\n| extend HumanActivityTime = iif(Caller contains \"@\", TimeGenerated, datetime(null))\r\n| extend HumanCaller = iif(Caller contains \"@\", Caller, \"\")\r\n| extend id_parts = split(_ResourceId, '/')\r\n| extend _ResourceId = iif(array_length(id_parts) > 9, strcat_array(array_slice(id_parts, 0, 8), '/'), _ResourceId )\r\n| summarize arg_max(TimeGenerated, *) by _ResourceId\r\n| extend Parts = split(_ResourceId, \"/\")\r\n| extend _ResourceId = tolower(tostring(strcat_array(array_slice(Parts, 0, 8), \"/\")))\r\n| project LastUpdated=TimeGenerated, _ResourceId, ResourceProviderValue, Account=Caller, ResourceGroup, SubscriptionId",
+              "size": 1,
+              "title": "AzureActivity Devices - Recent Recource Changes",
+              "timeContextFromParameter": "TImeRange",
+              "showExportToExcel": true,
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspce}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "LastUpdated",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "_ResourceId",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "ResourceProviderValue",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Account",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "ResourceGroup",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "SubscriptionId",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  }
+                ],
+                "rowLimit": 10000,
+                "filter": true
+              }
+            },
+            "name": "AzureActivityDevices - Copy"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "DeviceInfo\r\n| where isnotempty(AzureResourceId)\r\n| summarize arg_max(TimeGenerated, *) by AzureResourceId\r\n| extend IsAzureADJoined = iif(IsAzureADJoined == 1, \"Yes\", \"No\")\r\n| extend SensorHealthState = iif( isempty(SensorHealthState), \"Unknown\", SensorHealthState)\r\n| project\r\n    TimeGenerated,\r\n    DeviceName,\r\n    DeviceId,\r\n    IsAzureADJoined,\r\n    MachineGroup,\r\n    OSPlatform,\r\n    OnboardingStatus,\r\n    SensorHealthState,\r\n    AzureResourceId = tolower(tostring(AzureResourceId))\r\n| where MachineGroup in ({Group})\r\n| where OSPlatform in ({OS})\r\n| where OnboardingStatus in ({Onboarding})\r\n| where SensorHealthState in ({Status})",
+              "size": 1,
+              "title": "Summary of Azure VM & Arc from MDE",
+              "timeContextFromParameter": "TImeRange",
+              "showExportToExcel": true,
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspce}"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "TimeGenerated",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DeviceName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DeviceId",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "IsAzureADJoined",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "MachineGroup",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "OSPlatform",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "OnboardingStatus",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "SensorHealthState",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "AzureResourceId",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  }
+                ],
+                "rowLimit": 10000,
+                "filter": true
+              }
+            },
+            "name": "MDE_DeviceSummary - Copy"
+          }
+        ]
+      },
+      "conditionalVisibility": {
+        "parameterName": "SlimView",
+        "comparison": "isEqualTo",
+        "value": "No"
+      },
+      "name": "Details Group"
+    }
+  ],
+  "fallbackResourceIds": [
+    "Azure Security Center"
+  ],
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}
