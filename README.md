@@ -15,7 +15,7 @@ This workbook is intended for security engineers, cloud administrators, and SOC 
 
 ## Screenshot
 
-![Azure VM – MDE Onboarding Status Workbook](https://github.com/AndrewBlumhardt/workbooks/blob/main/MDE_Workbook.png)
+<p align="center"><img src="https://github.com/AndrewBlumhardt/workbooks/blob/main/images/MDE_Workbook.png" width="75%"/></p>
 
 ---
 

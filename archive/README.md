@@ -17,13 +17,39 @@ The signal is in the deviation. This workbook looks for:
 - **Admin change patterns**: bursts of privileged changes or modifications outside normal operational windows
 - **Behavioral drift**: UEBA signals, risky user flags, and device context suggesting an account is operating differently than it has historically
 
-## Coverage
+## Critical Dependency: Search Term Pattern
 
-- Main admin review with sign-in, incident, alert, device, and PIM pivots
-- Risky user investigation path using the same correlation flow
-- PIM activity trends and activation-level detail including role, source IP, and justification
+The **Search Term** parameter is the key dependency for this workbook.
+
+- Default value: `.admin@`
+- Purpose: identify likely admin identities in UPN patterns
+- Example alternatives: `adm@`, `-admin@`, `_admin@`, or a dedicated admin domain marker
+
+If your environment does not have a clear and consistent admin naming pattern, matching and correlation quality drops significantly.
+
+Use this view to validate and tune the Search Term first:
+
+## Major Revision Coverage
+
+### 1. Main Admin Review Experience
+
+The main view lists likely admin accounts and enables deeper investigation pivots, including sign-in activity, related incidents and alerts, device context, PIM history, and Azure activity.
+
+### 2. Risky User Review (Details)
+
+The risky-user path applies the same investigation flow to users flagged by identity risk signals. This is useful for quickly determining whether risky accounts also show privileged or suspicious operational behavior.
+
+### 3. PIM Activity Review
+
+The PIM section provides broad role activation visibility and trend analysis, including role/category filters and activation patterns.
+
+### 4. PIM Activity Details
+
+The detail view highlights activation-level evidence, including role, category, source IP, and justification comments for deeper governance and compliance review.
 
 ## Data Sources Required
+
+For full functionality, your workspace should include:
 
 - `SigninLogs`
 - `AuditLogs`
@@ -35,6 +61,8 @@ The signal is in the deviation. This workbook looks for:
 - `DeviceInfo`
 - `AzureActivity`
 
+If one or more sources are missing, sections can appear empty.
+
 ## Import
 
 1. Open Microsoft Sentinel or Azure Monitor.
@@ -44,13 +72,17 @@ The signal is in the deviation. This workbook looks for:
 5. Paste contents of `AzureAdminReviewWorkbook.json`.
 6. Save the workbook.
 
-## Critical Dependency: Search Term Pattern
+## Analyst Notes
 
-The **Search Term** parameter identifies likely admin identities by UPN pattern. Default value is `.admin@`. Tune this first to match your environment's naming standard before relying on any correlation results.
+- Start by tuning **Search Term** until admin candidate detection matches your naming standard.
+- Validate correlated user matches before operational action.
+- Use PIM comment and source IP context to identify weak or unusual activation behavior.
+- Empty widgets usually indicate missing data source coverage, not necessarily workbook errors.
 
-## Notes
+## Files
 
-- Validate correlated user matches before operational action
-- Use PIM comment and source IP context to identify weak or unusual activation behavior
-- Empty widgets usually indicate missing data source coverage, not workbook errors
-- The current version at [AndrewBlumhardt/EntraAdminReviewWorkbook](https://github.com/AndrewBlumhardt/EntraAdminReviewWorkbook) includes additional refinements and is the recommended starting point
+- `AzureAdminReviewWorkbook.json`
+
+## License
+
+Provided as-is. Validate queries and assumptions in your environment before production use.
